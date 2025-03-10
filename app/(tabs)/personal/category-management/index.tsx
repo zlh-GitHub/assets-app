@@ -7,17 +7,9 @@ import { useBottomTabBarHeight } from '@react-navigation/bottom-tabs';
 import { Colors } from '@/constants/Colors';
 import { useColorScheme, ColorScheme } from '@/hooks/useColorScheme';
 
+import { HeaderRightText, CategoryActions, CategoryIcon } from '@/constants/Category';
+
 import ListItem from './list-item';
-
-enum HeaderRightText {
-  Edit = 'Edit',
-  Done = 'Done',
-};
-
-enum CategoryActions {
-  Add = 'Add',
-  Edit = 'Edit',
-};
 
 function HeaderRight() {
   const [headerRightText, setHeaderRightText] = useState<HeaderRightText>(HeaderRightText.Edit);
@@ -36,7 +28,7 @@ export default function App() {
   const styles = createStyles(colorScheme);
   const navigation = useNavigation();
   const router = useRouter();
-  const categoryData = new Array(30).map((_, index) => ({ id: index }))
+  const categoryData = new Array(2).fill(1).map((_, index) => ({ id: index, icon: CategoryIcon[index], name: `category-${index}` }));
 
   // 1. 为啥使用函数重载会提示标识符重复？
   // 2. 下面代码会提示需要两个参数
@@ -57,6 +49,7 @@ export default function App() {
       title: '',
     });
   }, [navigation]);
+
   return (
     <SafeAreaView style={styles.container}>
       <FlatList
@@ -79,7 +72,7 @@ export default function App() {
           </Pressable>
         }
         data={categoryData}
-        renderItem={({ item, index }) => <ListItem data={item} />}
+        renderItem={({ item }) => <ListItem data={item} />}
         keyExtractor={(_, index) => String(index)}
       />
     </SafeAreaView>
