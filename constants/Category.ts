@@ -22,7 +22,8 @@ export const CategoryIconMapping = {
   'applewatch.watchface': 'watch',
   'airpods.pro': 'headphones',
   'appletv.fill': 'tv',
-  'homepod.and.homepod.mini': 'multitrack-audio'
+  'homepod.and.homepod.mini': 'multitrack-audio',
+  'minus.circle.fill': 'remove-circle'
 } as Partial<
   Record<
   CategoryIconMappingKey,

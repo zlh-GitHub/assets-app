@@ -5,7 +5,7 @@ import Header from '@/components/Header';
 import { Colors } from '@/constants/Colors';
 import { useColorScheme } from '@/hooks/useColorScheme';
 
-export default function HomeStack() {
+export default function PersonalStack() {
   const colorScheme = useColorScheme();
   const navigation = useNavigation();
   const handleEditCategory = () => { };
@@ -48,7 +48,7 @@ export default function HomeStack() {
         options={{
           // https://docs.expo.dev/router/advanced/modals/
           presentation: 'modal', // 配置抽屉，iOS默认从底部弹出
-          headerShown: false,
+          headerShown: true,
         }}
       />
     </Stack>

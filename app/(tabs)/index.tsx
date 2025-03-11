@@ -5,19 +5,27 @@ import {
   Dimensions,
   SafeAreaView
 } from 'react-native';
-
-
+import { useColorScheme, ColorScheme } from "@/hooks/useColorScheme";
+import { SafeAreaThemedView } from "@/components/SafeAreaThemedView";
+import { Colors } from "@/constants/Colors";
 const { width } = Dimensions.get('window');
 
 
 export default function HomeScreen() {
+  const colorScheme = useColorScheme();
+  const styles = createStyles(colorScheme);
   return (
-    <SafeAreaView>
-      <Text>翻译</Text>
-    </SafeAreaView>
+    <SafeAreaThemedView style={styles.container}>
+      <Text style={styles.textColor}>翻译</Text>
+    </SafeAreaThemedView>
   )
 }
 
-const styles = StyleSheet.create({
-  
-});
+const createStyles = (theme: ColorScheme) => StyleSheet.create({
+  container: {
+    flex: 1,
+  },
+  textColor: {
+    color: Colors[theme].text,
+  }
+})

@@ -1,24 +1,37 @@
-import { View, Text, SafeAreaView, Pressable, StyleSheet, FlatList, ScrollView } from 'react-native';
+import { View, Text, Pressable, StyleSheet, ScrollView, Animated } from 'react-native';
 import { useNavigation, useRouter } from 'expo-router';
 import { useEffect, useState, useCallback, useRef } from 'react';
 import { useBottomTabBarHeight } from '@react-navigation/bottom-tabs';
-// import { useNavigation } from '@react-navigation/native';
 
 import { Colors } from '@/constants/Colors';
 import { useColorScheme, ColorScheme } from '@/hooks/useColorScheme';
+import { useBottomTabOverflow } from '@/components/ui/TabBarBackground';
 
 import { HeaderRightText, CategoryActions, CategoryIcon } from '@/constants/Category';
-
+import { IconSymbol } from '@/components/ui/IconSymbol';
 import ListItem from './list-item';
+import { SafeAreaThemedView } from '@/components/SafeAreaThemedView';
 
-function HeaderRight() {
+interface IEditCategory {
+  (...args: [type: CategoryActions.Add] | [type: CategoryActions.Edit, categoryId: number]): void
+}
+
+interface IHeaderRightClick {
+  (status: HeaderRightText): void
+}
+
+function HeaderRight({ onClick }: { onClick: IHeaderRightClick }) {
   const [headerRightText, setHeaderRightText] = useState<HeaderRightText>(HeaderRightText.Edit);
   const colorScheme = useColorScheme();
-  const handleRightClick = () =>
-    setHeaderRightText(prev => prev === HeaderRightText.Edit ? HeaderRightText.Done : HeaderRightText.Edit);
+  const handleRightClick = () => 
+    setHeaderRightText(prev => {
+      const newVal = prev === HeaderRightText.Edit ? HeaderRightText.Done : HeaderRightText.Edit;
+      onClick(newVal);
+      return newVal;
+    });
   return (
     <Pressable onPress={handleRightClick}>
-      <Text style={{ color: Colors[colorScheme].tint, fontSize: 17 }}>{headerRightText}</Text>
+      <Text style={{ color: Colors[colorScheme].primaryColor, fontSize: 17 }}>{headerRightText}</Text>
     </Pressable >
   )
 }
@@ -28,12 +41,14 @@ export default function App() {
   const styles = createStyles(colorScheme);
   const navigation = useNavigation();
   const router = useRouter();
-  const categoryData = new Array(2).fill(1).map((_, index) => ({ id: index, icon: CategoryIcon[index], name: `category-${index}` }));
+  const bottom = useBottomTabOverflow();
+  const [isEdit, setIsEdit] = useState(false); // 管理分类是否处于编辑状态
+  const categoryData = new Array(6).fill(1).map((_, index) => ({ id: index, icon: CategoryIcon[index], name: `category-${index}` }));
 
   // 1. 为啥使用函数重载会提示标识符重复？
   // 2. 下面代码会提示需要两个参数
   // const handleAddOrEditCategory = <T extends CategoryActions>(type: T, categoryId: T extends CategoryActions.Edit ? number : undefined) => {}
-  const handleAddOrEditCategory = (...args: [type: CategoryActions.Add] | [type: CategoryActions.Edit, categoryId: number]) => {
+  const handleAddOrEditCategory: IEditCategory = (...args) => {
     const [type, categoryId] = args;
     router.push({
       pathname: '/personal/edit-category',
@@ -43,39 +58,51 @@ export default function App() {
     });
   }
 
+  const handleManagementCategory: IHeaderRightClick = (status) => {
+    if (status === HeaderRightText.Edit) {
+      setIsEdit(true);
+    } else {
+      setIsEdit(false);
+    }
+  }
+
   useEffect(() => {
     navigation.setOptions({
-      headerRight: () => <HeaderRight />,
+      headerRight: () => <HeaderRight onClick={handleManagementCategory} />,
       title: '',
     });
   }, [navigation]);
 
   return (
-    <SafeAreaView style={styles.container}>
-      <FlatList
-        style={styles.categoryList}
-        ListHeaderComponent={
-          <View>
-            <Text style={styles.title}>
-              Category Management
-            </Text>
-          </View>
-        }
-        ItemSeparatorComponent={() => (
-          <View style={styles.itemSeparator}></View>
-        )}
-        ListFooterComponent={
+    <SafeAreaThemedView style={styles.container}>
+      <Animated.ScrollView
+        style={styles.scrollContainer}
+        scrollIndicatorInsets={{ bottom, top: 0, right: 0 }} // 设置滚动条的偏移量，防止底部被TabBar遮挡
+        contentContainerStyle={{ paddingBottom: bottom + 15 }} // 底部留白，防止底部内容被TabBar遮挡
+      >
+        <Text style={[styles.title, styles.textColor]}>
+          Category Management
+        </Text>
+        <View style={styles.categoryList}>
+          {
+            categoryData.map(item => (
+              <ListItem key={item.id} data={item} isEdit={isEdit} />
+            ))
+
+          }
           <Pressable onPress={() => handleAddOrEditCategory(CategoryActions.Add)}>
-            <View>
-              <Text>Add Category</Text>
+            <View style={styles.addCategory}>
+              <IconSymbol
+                name='plus.circle.fill'
+                color={Colors[colorScheme].primaryColor}
+                size={26}
+              />
+              <Text style={styles.addCategoryText}>Add Category</Text>
             </View>
           </Pressable>
-        }
-        data={categoryData}
-        renderItem={({ item }) => <ListItem data={item} />}
-        keyExtractor={(_, index) => String(index)}
-      />
-    </SafeAreaView>
+        </View>
+      </Animated.ScrollView>
+    </SafeAreaThemedView>
   )
 }
 
@@ -85,19 +112,29 @@ const createStyles = (theme: ColorScheme) => StyleSheet.create({
   },
   scrollContainer: {
     flex: 1,
-    backgroundColor: 'pink',
-    paddingHorizontal: 20,
+    padding: 15,
+  },
+  textColor: {
+    color: Colors[theme].text,
   },
   title: {
     fontSize: 32,
     fontWeight: 'bold',
-    color: Colors[theme].text,
+    marginBottom: 20,
   },
   categoryList: {
-    height: 500,
+    backgroundColor: Colors[theme].categoryListBackground,
+    borderRadius: 10,
   },
-  itemSeparator: {
-    height: StyleSheet.hairlineWidth,
-    backgroundColor: Colors[theme].text,
+  addCategory: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: 20,
+    height: 70,
+  },
+  addCategoryText: {
+    color: Colors[theme].primaryColor,
+    fontSize: 17,
+    marginLeft: 10,
   }
 });

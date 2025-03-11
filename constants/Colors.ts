@@ -5,24 +5,27 @@
 
 const tintColorLight = '#3466dd';
 const tintColorDark = '#fff';
+const themeColor = '#3b83fa';
 
 export const Colors = {
   light: {
     text: '#11181C',
+    primaryColor: themeColor, // 主题颜色
     background: '#fff',
     tint: tintColorLight,
     bottomBarColor: '#3466dd',
-    icon: '#687076',
     tabIconDefault: '#687076',
     tabIconSelected: tintColorLight,
+    categoryListBackground: '#f0f0f0',
   },
   dark: {
     text: '#ECEDEE',
-    background: '#151718',
+    primaryColor: themeColor,
+    background: 'black',
     tint: tintColorDark,
     bottomBarColor: 'white',
-    icon: '#9BA1A6',
     tabIconDefault: '#9BA1A6',
     tabIconSelected: tintColorDark,
+    categoryListBackground: '#1c1c1e',
   },
 };

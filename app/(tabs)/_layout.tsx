@@ -7,14 +7,16 @@ import { IconSymbol } from '@/components/ui/IconSymbol';
 import TabBarBackground from '@/components/ui/TabBarBackground';
 import { Colors } from '@/constants/Colors';
 import { useColorScheme } from '@/hooks/useColorScheme';
+import { useRouter } from 'expo-router';
 
 export default function TabLayout() {
   const colorScheme = useColorScheme();
+  const router = useRouter();
 
   return (
     <Tabs
       screenOptions={{
-        tabBarActiveTintColor: Colors[colorScheme].bottomBarColor,
+        tabBarActiveTintColor: Colors[colorScheme].primaryColor,
         headerShown: false,
         tabBarButton: HapticTab,
         tabBarBackground: TabBarBackground,
@@ -25,7 +27,9 @@ export default function TabLayout() {
           },
           default: {},
         }),
-      }}>
+      }}
+      // initialRouteName='/(tabs)/home/index'
+    >
       <Tabs.Screen
         name="index"
         options={{
