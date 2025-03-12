@@ -17,6 +17,9 @@ const MAPPING = {
   'creditcard.fill': 'credit-card',
   'person.fill': 'person',
   'chevron.right': 'keyboard-arrow-right',
+  'chevron.down': 'keyboard-arrow-down',
+  'magnifyingglass': 'search',
+  'arrow.up.arrow.down': 'sort',
   ...CategoryIconMapping
 } as Partial<
   Record<
