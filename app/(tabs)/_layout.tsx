@@ -8,7 +8,7 @@ import TabBarBackground from '@/components/ui/TabBarBackground';
 import { Colors } from '@/constants/Colors';
 import { useColorScheme } from '@/hooks/useColorScheme';
 import { useRouter } from 'expo-router';
-
+// docs：https://docs.expo.dev/router/advanced/tabs/
 export default function TabLayout() {
   const colorScheme = useColorScheme();
   const router = useRouter();
@@ -27,14 +27,24 @@ export default function TabLayout() {
           },
           default: {},
         }),
+        animation: 'none',
       }}
-      // initialRouteName='/(tabs)/home/index'
+      // initialRouteName='assets'
     >
       <Tabs.Screen
         name="index"
         options={{
           title: 'Assets',
           tabBarIcon: ({ color }) => <IconSymbol size={28} name="creditcard.fill" color={color} />,
+          href: null,
+        }}
+      />
+      <Tabs.Screen
+        name="assets"
+        options={{
+          title: 'Assets',
+          tabBarIcon: ({ color }) => <IconSymbol size={28} name="creditcard.fill" color={color} />,
+          // href: null,
         }}
       />
       <Tabs.Screen
@@ -42,6 +52,18 @@ export default function TabLayout() {
         options={{
           title: 'Add',
           tabBarIcon: ({ color }) => <IconSymbol size={28} name="plus.circle.fill" color={color} />,
+          // href: null, // 隐藏实际路由
+          // tabBarButton: (props) => (
+          //   <HapticTab
+          //     {...props}
+          //     onPress={(e) => {
+          //       e.preventDefault();
+          //       router.push('/(tabs)/assets/add-product', {
+          //         relativeToDirectory: false,
+          //       }); // 跳转到指定路由
+          //     }}
+          //   />
+          // ),
         }}
       />
       <Tabs.Screen
