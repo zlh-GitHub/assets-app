@@ -11,16 +11,20 @@ import {
   Animated,
   LayoutAnimation,
   UIManager,
-  Platform
+  Platform,
+  FlatList,
+  ScrollView,
 } from 'react-native';
-// import { Picker } from '@react-native-picker/picker';
-// import DropDownPicker from 'react-native-dropdown-picker';
-import { MenuView, MenuComponentRef } from '@react-native-menu/menu';
+// import { MenuView, MenuComponentRef } from '@react-native-menu/menu';
 import React, { useState, useRef } from 'react';
 import { useColorScheme, ColorScheme } from "@/hooks/useColorScheme";
 import { SafeAreaThemedView } from "@/components/SafeAreaThemedView";
 import { Colors } from "@/constants/Colors";
 import { IconSymbol } from '@/components/ui/IconSymbol';
+import { useBottomTabOverflow } from '@/components/ui/TabBarBackground';
+import AssetItem, { AssetItemData } from '@/components/AssetItem';
+
+import { MOCK_ASSETS } from './mock-data';
 
 const { width } = Dimensions.get('window');
 
@@ -48,7 +52,8 @@ const FILTER_TYPE = [{
 }, {
   label: 'Favorite',
   value: 'Favorite',
-}]
+}];
+
 
 export default function HomeScreen() {
   const colorScheme = useColorScheme();
@@ -56,7 +61,7 @@ export default function HomeScreen() {
   const [searchIng, setSearchIng] = useState(false);
   const [showSort, setShowSort] = useState(false);
   const [showFilter, setShowFilter] = useState(false);
-
+  const bottom = useBottomTabOverflow();
   const fadeAnim = useRef(new Animated.Value(0)).current;
 
   // const menuRef = useRef<MenuComponentRef>(null);
@@ -65,171 +70,115 @@ export default function HomeScreen() {
     console.log(nativeEvent.nativeEvent.text);
   }
 
-  const handleToogleSearchIng = () => {
+  const handleToggleSearchIng = () => {
     LayoutAnimation.configureNext(LayoutAnimation.Presets.spring);
     setSearchIng(prev => !prev);
   }
 
-  const handletoogleSort = () => {
+  const handleToggleSort = () => {
     setShowSort(prev => !prev);
   }
 
-  const handleToogleFilter = () => {
+  const handleToggleFilter = () => {
     setShowFilter(prev => !prev);
   }
 
   return (
-    <SafeAreaThemedView style={styles.container}>
-      <View style={styles.header}>
-        <Animated.View style={styles.headerTop}>
-          {
-            searchIng ? (
-              <>
-                <IconSymbol
-                  name='magnifyingglass'
-                  size={22}
-                  color='white'
-                />
-                <TextInput
-                  placeholder='Search Assets'
-                  style={styles.searchInput}
-                  inputMode='search'
-                  placeholderTextColor='#ffffff4d'
-                  textAlign='left'
-                  onChange={searchInputOnChangeHandle}
-                  clearButtonMode='while-editing' // 当编辑的时候 input 框右边显示清楚按钮
-                  selectionColor="#FFF"
-                  autoFocus
-                />
-                <Pressable onPress={handleToogleSearchIng}>
-                  <Text style={[styles.whiteColor, { fontSize: 18 }]}>Cancel</Text>
-                </Pressable>
-              </>
-            ) : (
-              <>
-                <View style={styles.headerTitle}>
-                  <Text style={[styles.whiteColor, { fontSize: 22, fontWeight: 'bold' }]}>My Assets</Text>
-                  <Text style={[styles.whiteColor, { fontSize: 18 }]}>5/2</Text>
-                </View>
-                <View style={styles.actions}>
-                  <Pressable
-                    onPress={handleToogleSearchIng}
-                  >
-                    <IconSymbol
-                      name='magnifyingglass'
-                      size={22}
-                      color={ICON_COLOR.get(searchIng) || 'white'}
-                    />
+    <SafeAreaThemedView style={{ flex: 1 }}>
+      <View style={styles.container}>
+        <View style={styles.header}>
+          <Animated.View style={styles.headerTop}>
+            {
+              searchIng ? (
+                <>
+                  <IconSymbol
+                    name='magnifyingglass'
+                    size={22}
+                    color='white'
+                  />
+                  <TextInput
+                    placeholder='Search Assets'
+                    style={styles.searchInput}
+                    inputMode='search'
+                    placeholderTextColor='#ffffff4d'
+                    textAlign='left'
+                    onChange={searchInputOnChangeHandle}
+                    clearButtonMode='while-editing' // 当编辑的时候 input 框右边显示清楚按钮
+                    selectionColor="#FFF"
+                    autoFocus
+                  />
+                  <Pressable onPress={handleToggleSearchIng}>
+                    <Text style={[styles.whiteColor, { fontSize: 18 }]}>Cancel</Text>
                   </Pressable>
-                  <Pressable
-                    onPress={handletoogleSort}
-                  >
-                    <IconSymbol
-                      name='arrow.up.arrow.down'
-                      size={25}
-                      color={ICON_COLOR.get(showSort) || 'white'}
-                    />
-                  </Pressable>
-                  <Pressable
-                    onPress={handleToogleFilter}
-                  >
-                    <View style={styles.filterIcon}>
-                      <Text style={{ fontSize: 18, color: ICON_COLOR.get(showFilter) || 'white' }}>All</Text>
+                </>
+              ) : (
+                <>
+                  <View style={styles.headerTitle}>
+                    <Text style={[styles.whiteColor, { fontSize: 22, fontWeight: 'bold' }]}>My Assets</Text>
+                    <Text style={[styles.whiteColor, { fontSize: 18 }]}>5/2</Text>
+                  </View>
+                  <View style={styles.actions}>
+                    <Pressable
+                      onPress={handleToggleSearchIng}
+                    >
                       <IconSymbol
-                        name='chevron.down'
-                        size={20}
-                        color={ICON_COLOR.get(showFilter) || 'white'}
+                        name='magnifyingglass'
+                        size={22}
+                        color={ICON_COLOR.get(searchIng) || 'white'}
                       />
-                    </View>
-                  </Pressable>
-                </View>
-              </>
-            )
+                    </Pressable>
+                    <Pressable
+                      onPress={handleToggleSort}
+                    >
+                      <IconSymbol
+                        name='arrow.up.arrow.down'
+                        size={25}
+                        color={ICON_COLOR.get(showSort) || 'white'}
+                      />
+                    </Pressable>
+                    <Pressable
+                      onPress={handleToggleFilter}
+                    >
+                      <View style={styles.filterIcon}>
+                        <Text style={{ fontSize: 18, color: ICON_COLOR.get(showFilter) || 'white' }}>All</Text>
+                        <IconSymbol
+                          name='chevron.down'
+                          size={20}
+                          color={ICON_COLOR.get(showFilter) || 'white'}
+                        />
+                      </View>
+                    </Pressable>
+                  </View>
+                </>
+              )
+            }
+          </Animated.View>
+          <View style={styles.headerBottom}>
+            <View style={[styles.headerBottomItem, { paddingRight: 20 }]}>
+              <Text style={styles.headerBottomItemTitle}>Total Assets</Text>
+              {/* adjustsFontSizeToFit 是 iOS 的属性，在宽度不够的时候可以自动缩小字体的大小，Android 需要使用 numberOfLines 和 ellipsizeMode */}
+              <Text adjustsFontSizeToFit={true} numberOfLines={1} ellipsizeMode='tail' style={styles.headerBottomItemValue}>$100,000</Text>
+            </View>
+            <View style={styles.headerBottomItemSeparator} />
+            <View style={[styles.headerBottomItem, { paddingLeft: 20 }]}>
+              <Text style={styles.headerBottomItemTitle}>Total Daily Cost</Text>
+              <Text numberOfLines={1} ellipsizeMode='tail' style={styles.headerBottomItemValue}>$100,000</Text>
+            </View>
+          </View>
+        </View>
+        <ScrollView
+          style={styles.assetList}
+          showsVerticalScrollIndicator={false}
+          scrollIndicatorInsets={{ bottom, top: 0, right: 0 }} // 设置滚动条的偏移量，防止底部被TabBar遮挡
+          contentContainerStyle={{ paddingBottom: bottom }} // 底部留白，防止底部内容被TabBar遮挡
+        >
+          {
+            MOCK_ASSETS.map((item) => (
+              <AssetItem key={item.id} data={item} />
+            ))
           }
-        </Animated.View>
-        <View style={styles.headerBottom}>
-          <View>
-            <Text>Total Assets</Text>
-            <Text>$100,000</Text>
-          </View>
-          <View>
-            <Text>Total Daily Cost</Text>
-            <Text>$100,000</Text>
-          </View>
-        </View>
+        </ScrollView>
       </View>
-      {/* <MenuView
-        ref={menuRef}
-        title="Menu Title"
-        onPressAction={({ nativeEvent }) => {
-          console.warn(JSON.stringify(nativeEvent));
-        }}
-        actions={[
-          {
-            id: 'add',
-            title: 'Add',
-            titleColor: '#2367A2',
-            image: Platform.select({
-              ios: 'plus',
-              android: 'ic_menu_add',
-            }),
-            imageColor: '#2367A2',
-            subactions: [
-              {
-                id: 'nested1',
-                title: 'Nested action',
-                titleColor: 'rgba(250,180,100,0.5)',
-                subtitle: 'State is mixed',
-                image: Platform.select({
-                  ios: 'heart.fill',
-                  android: 'ic_menu_today',
-                }),
-                imageColor: 'rgba(100,200,250,0.3)',
-                state: 'mixed',
-              },
-              {
-                id: 'nestedDestructive',
-                title: 'Destructive Action',
-                attributes: {
-                  destructive: true,
-                },
-                image: Platform.select({
-                  ios: 'trash',
-                  android: 'ic_menu_delete',
-                }),
-              },
-            ],
-          },
-          {
-            id: 'share',
-            title: 'Share Action',
-            titleColor: '#46F289',
-            subtitle: 'Share action on SNS',
-            image: Platform.select({
-              ios: 'square.and.arrow.up',
-              android: 'ic_menu_share',
-            }),
-            imageColor: '#46F289',
-            state: 'on',
-          },
-          {
-            id: 'destructive',
-            title: 'Destructive Action',
-            attributes: {
-              destructive: true,
-            },
-            image: Platform.select({
-              ios: 'trash',
-              android: 'ic_menu_delete',
-            }),
-          },
-        ]}
-        shouldOpenOnLongPress={false}
-      >
-        <View>
-          <Text>Test</Text>
-        </View>
-      </MenuView> */}
     </SafeAreaThemedView>
   )
 }
@@ -237,16 +186,24 @@ export default function HomeScreen() {
 const createStyles = (theme: ColorScheme) => StyleSheet.create({
   container: {
     flex: 1,
+    paddingHorizontal: 10,
+    display: 'flex',
+    flexDirection: 'column',
+    gap: 10,
   },
   whiteColor: {
     color: 'white',
   },
   header: {
     width: '100%',
-    height: 180,
+    height: 150,
     backgroundColor: Colors[theme].primaryColor,
     borderRadius: 15,
     paddingHorizontal: 20,
+    paddingBottom: 25,
+    display: 'flex',
+    flexDirection: 'column',
+    justifyContent: 'space-between',
   },
   headerTop: {
     width: '100%',
@@ -260,12 +217,6 @@ const createStyles = (theme: ColorScheme) => StyleSheet.create({
     color: 'white',
     fontSize: 20,
     marginLeft: 10,
-  },
-  headerBottom: {
-    width: '100%',
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
   },
   headerTitle: {
     flexDirection: 'row',
@@ -284,5 +235,41 @@ const createStyles = (theme: ColorScheme) => StyleSheet.create({
     justifyContent: 'space-between',
     alignItems: 'center',
     gap: 5,
-  }
+  },
+  headerBottom: {
+    width: '100%',
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+  },
+  headerBottomItem: {
+    width: '50%',
+    boxSizing: 'border-box',
+
+    flexDirection: 'column',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  headerBottomItemTitle: {
+    height: 20,
+    fontSize: 16,
+    lineHeight: 20,
+    color: 'white',
+    marginBottom: 10,
+  },
+  headerBottomItemValue: {
+    height: 30,
+    fontSize: 24,
+    lineHeight: 30,
+    color: 'white',
+    fontWeight: 'bold',
+  },
+  headerBottomItemSeparator: {
+    width: StyleSheet.hairlineWidth,
+    height: '80%',
+    backgroundColor: '#9BA1A6',
+  },
+  assetList: {
+    flex: 1,
+  },
 })

@@ -18,7 +18,7 @@ export default function PersonalStack() {
         }}
       />
       <Stack.Screen
-        name="add-product"
+        name="edit-asset"
         options={{
           headerShown: false,
           presentation: 'modal',

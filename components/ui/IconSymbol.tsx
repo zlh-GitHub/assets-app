@@ -5,30 +5,12 @@ import { SymbolWeight } from 'expo-symbols';
 import React from 'react';
 import { OpaqueColorValue, StyleProp, ViewStyle } from 'react-native';
 
-import { CategoryIconMapping } from '@/constants/Category';
+import { ICON_MAPPING } from '@/constants/Icon';
 
 // Android 和 Web 平台会使用这个组件，使用 MaterialIcons
 // 因为使用 IconSymbol 组件的时候传入的 SF Symbols 值，所以要做一层映射
-// Add your SFSymbol to MaterialIcons mappings here.
-const MAPPING = {
-  // See MaterialIcons here: https://icons.expo.fyi
-  // See SF Symbols in the SF Symbols app on Mac.
-  'plus.circle.fill': 'add-circle',
-  'creditcard.fill': 'credit-card',
-  'person.fill': 'person',
-  'chevron.right': 'keyboard-arrow-right',
-  'chevron.down': 'keyboard-arrow-down',
-  'magnifyingglass': 'search',
-  'arrow.up.arrow.down': 'sort',
-  ...CategoryIconMapping
-} as Partial<
-  Record<
-    import('expo-symbols').SymbolViewProps['name'],
-    React.ComponentProps<typeof MaterialIcons>['name']
-  >
->;
 
-export type IconSymbolName = keyof typeof MAPPING;
+export type IconSymbolName = keyof typeof ICON_MAPPING;
 
 /**
  * An icon component that uses native SFSymbols on iOS, and MaterialIcons on Android and web. This ensures a consistent look across platforms, and optimal resource usage.
@@ -47,5 +29,5 @@ export function IconSymbol({
   style?: StyleProp<ViewStyle>;
   weight?: SymbolWeight;
 }) {
-  return <MaterialIcons color={color} size={size} name={MAPPING[name]} style={style} />;
+  return <MaterialIcons color={color} size={size} name={ICON_MAPPING[name]} style={style} />;
 }
