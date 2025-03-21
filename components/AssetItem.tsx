@@ -1,11 +1,14 @@
-import { View, Text, StyleSheet, Pressable, Animated } from 'react-native';
-import { Colors } from '@/constants/Colors';
-import { ColorScheme, useColorScheme } from '@/hooks/useColorScheme';
-import { IconSymbol } from '@/components/ui/IconSymbol';
-import { IconName } from '@/constants/Icon';
 import React, { useState, useRef } from 'react';
+import { View, Text, StyleSheet, Pressable, Animated } from 'react-native';
+
+import { IconSymbol } from '@/components/ui/IconSymbol';
+
 import { useRouter } from 'expo-router';
 import { useDispatch } from 'react-redux';
+import { ColorScheme, useColorScheme } from '@/hooks/useColorScheme';
+
+import { Colors } from '@/constants/Colors';
+import { ICON } from '@/constants/Icon';
 import { createDddAssetAction, createDeleteAssetAction, createUpdateAssetAction } from '@/store/actionCreator/assetsActionCreator';
 import * as ASSETS_ACTIONS from '@/store/actions/assetsActions';
 
@@ -129,19 +132,19 @@ export default function AssetItem({ data }: Props) {
           <View style={styles.actionContainer}>
             <Pressable onPress={handleToggleFavorite}>
               <View style={styles.actionItem}>
-                <IconSymbol name={isFavorite ? 'star.fill' : 'star'} size={26} color='white' />
+                <IconSymbol name={ICON[isFavorite ? 'star.fill' : 'star']} size={26} color='white' />
                 <Text style={styles.actionText}>Favorite</Text>
               </View>
             </Pressable>
             <Pressable onPress={handleEdit}>
               <View style={styles.actionItem}>
-                <IconSymbol name='pencil' size={26} color='white' />
+                <IconSymbol name={ICON['pencil']} size={26} color='white' />
                 <Text style={styles.actionText}>Edit</Text>
               </View>
             </Pressable>
             <Pressable onPress={handleDelete}>
               <View style={styles.actionItem}>
-                <IconSymbol name='trash' size={26} color='white' />
+                <IconSymbol name={ICON['trash']} size={26} color='white' />
                 <Text style={styles.actionText}>Delete</Text>
               </View>
             </Pressable>

@@ -1,13 +1,16 @@
-import { Tabs } from 'expo-router';
 import React from 'react';
 import { Platform, SafeAreaView } from 'react-native';
+import { Tabs } from 'expo-router';
 
 import { HapticTab } from '@/components/HapticTab';
 import { IconSymbol } from '@/components/ui/IconSymbol';
 import TabBarBackground from '@/components/ui/TabBarBackground';
-import { Colors } from '@/constants/Colors';
+
 import { useColorScheme } from '@/hooks/useColorScheme';
 import { useRouter } from 'expo-router';
+
+import { Colors } from '@/constants/Colors';
+import { ICON } from '@/constants/Icon';
 // docs：https://docs.expo.dev/router/advanced/tabs/
 export default function TabLayout() {
   const colorScheme = useColorScheme();
@@ -35,7 +38,7 @@ export default function TabLayout() {
         name="index"
         options={{
           title: 'Assets',
-          tabBarIcon: ({ color }) => <IconSymbol size={28} name="creditcard.fill" color={color} />,
+          tabBarIcon: ({ color }) => <IconSymbol size={28} name={ICON['creditcard.fill']} color={color} />,
           href: null,
         }}
       />
@@ -43,7 +46,7 @@ export default function TabLayout() {
         name="assets"
         options={{
           title: 'Assets',
-          tabBarIcon: ({ color }) => <IconSymbol size={28} name="creditcard.fill" color={color} />,
+          tabBarIcon: ({ color }) => <IconSymbol size={28} name={ICON['creditcard.fill']} color={color} />,
           // href: null,
         }}
       />
@@ -51,7 +54,7 @@ export default function TabLayout() {
         name="add"
         options={{
           title: 'Add',
-          tabBarIcon: ({ color }) => <IconSymbol size={28} name="plus.circle.fill" color={color} />,
+          tabBarIcon: ({ color }) => <IconSymbol size={28} name={ICON['plus.circle.fill']} color={color} />,
           // href: null, // 隐藏实际路由
           // tabBarButton: (props) => (
           //   <HapticTab
@@ -70,7 +73,7 @@ export default function TabLayout() {
         name="personal"
         options={{
           title: 'My',
-          tabBarIcon: ({ color }) => <IconSymbol size={28} name="person.fill" color={color} />,
+          tabBarIcon: ({ color }) => <IconSymbol size={28} name={ICON['person.fill']} color={color} />,
         }}
       />
     </Tabs>

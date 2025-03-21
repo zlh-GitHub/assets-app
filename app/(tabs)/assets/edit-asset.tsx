@@ -204,11 +204,11 @@ export default function AddProduct() {
               <Text style={styles.formItemTitle}>Estimated Usage Count</Text>
               <View style={styles.formItemValue}>
                 <Pressable>
-                  <IconSymbol name="minus.circle.fill" size={28} color="gray" />
+                  <IconSymbol name={ICON['minus.circle.fill']} size={28} color="gray" />
                 </Pressable>
                 <Text style={styles.formItemValueText}>100</Text>
                 <Pressable>
-                  <IconSymbol name="plus.circle.fill" size={28} color={Colors[colorScheme].primaryColor} />
+                  <IconSymbol name={ICON['plus.circle.fill']} size={28} color={Colors[colorScheme].primaryColor} />
                 </Pressable>
               </View>
             </View>

@@ -9,7 +9,7 @@ import { useColorScheme, ColorScheme } from "@/hooks/useColorScheme";
 import { Colors } from "@/constants/Colors";
 import { Category } from "@/store/type";
 import * as CATEGORY_ACTIONS from '@/store/actions/categoryActions';
-
+import { ICON } from '@/constants/Icon';
 type Props = {
   data: Category,
   isEdit: boolean
@@ -45,7 +45,7 @@ export default function ListItem(props: Props) {
           isEdit && (
             <View>
               <IconSymbol
-                name='minus.circle.fill'
+                name={ICON['minus.circle.fill']}
                 color='#ea5544'
                 size={26}
               />
@@ -65,7 +65,7 @@ export default function ListItem(props: Props) {
           </View>
           <View>
             <IconSymbol
-              name='chevron.right'
+              name={ICON['chevron.right']}
               color={Colors[colorScheme].text}
               size={12}
             />

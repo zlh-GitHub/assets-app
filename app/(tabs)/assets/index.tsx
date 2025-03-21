@@ -1,3 +1,4 @@
+import React, { useState, useRef } from 'react';
 import {
   StyleSheet,
   View,
@@ -15,16 +16,19 @@ import {
   FlatList,
   ScrollView,
 } from 'react-native';
+
 // import { MenuView, MenuComponentRef } from '@react-native-menu/menu';
-import React, { useState, useRef } from 'react';
-import { useColorScheme, ColorScheme } from "@/hooks/useColorScheme";
 import { SafeAreaThemedView } from "@/components/SafeAreaThemedView";
-import { Colors } from "@/constants/Colors";
-import { IconSymbol } from '@/components/ui/IconSymbol';
-import { useBottomTabOverflow } from '@/components/ui/TabBarBackground';
 import AssetItem from '@/components/AssetItem';
+import { IconSymbol } from '@/components/ui/IconSymbol';
+
 import { useSelector, useDispatch, useStore } from 'react-redux';
+import { useColorScheme, ColorScheme } from "@/hooks/useColorScheme";
+import { useBottomTabOverflow } from '@/components/ui/TabBarBackground';
+
+import { Colors } from "@/constants/Colors";
 import { Store } from '@/store/type';
+import { ICON } from '@/constants/Icon';
 
 const { width } = Dimensions.get('window');
 
@@ -93,7 +97,7 @@ export default function HomeScreen() {
               searchIng ? (
                 <>
                   <IconSymbol
-                    name='magnifyingglass'
+                    name={ICON['magnifyingglass']}
                     size={22}
                     color='white'
                   />
@@ -123,7 +127,7 @@ export default function HomeScreen() {
                       onPress={handleToggleSearchIng}
                     >
                       <IconSymbol
-                        name='magnifyingglass'
+                        name={ICON['magnifyingglass']}
                         size={22}
                         color={ICON_COLOR.get(searchIng) || 'white'}
                       />
@@ -132,7 +136,7 @@ export default function HomeScreen() {
                       onPress={handleToggleSort}
                     >
                       <IconSymbol
-                        name='arrow.up.arrow.down'
+                        name={ICON['arrow.up.arrow.down']}
                         size={25}
                         color={ICON_COLOR.get(showSort) || 'white'}
                       />
@@ -143,7 +147,7 @@ export default function HomeScreen() {
                       <View style={styles.filterIcon}>
                         <Text style={{ fontSize: 18, color: ICON_COLOR.get(showFilter) || 'white' }}>All</Text>
                         <IconSymbol
-                          name='chevron.down'
+                          name={ICON['chevron.down']}
                           size={20}
                           color={ICON_COLOR.get(showFilter) || 'white'}
                         />
