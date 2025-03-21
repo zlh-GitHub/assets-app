@@ -30,6 +30,7 @@ export const ICON_MAPPING = {
   'star.fill': 'star',
   'trash': 'delete-outline',
   'photo.on.rectangle.angled': 'photo-library',
+  'xmark.circle': 'remove-circle-outline',
 } as Partial<
   Record<
   IconName,

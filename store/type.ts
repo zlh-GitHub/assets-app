@@ -1,30 +1,33 @@
 import { IconName } from '@/constants/Icon';
 
 export type AssetItemData = {
-  id: number;
-  name: string;
-  price: number;
-  dailyCost: number;
-  days: number;
-  icon: IconName;
-  purchaseDate: string;
-  purchasePrice: number;
-  totalPrice: number;
-  favorite?: boolean;
-  category: {
-    id: number;
-    name: string;
-    icon: IconName;
-  },
-  note?: string;
-  retired?: boolean;
-  retiredDate?: string;
+  id: number; // id
+  name: string; // 物品名字
+  purchaseDate: string; // 购买日期 timestamp
+  purchasePrice: number; // 购买价格
+  icon: IconName; // 物品图标
+  warrantyDate?: string; // 保修日期
+  usageCount?: number; // 设置目标使用次数
+  dailyPrice?: number; // 设置目标每日价格要达到多少
+  favorite?: boolean; // 是否收藏
+  categoryId?: number; // 分类ID
+  note?: string; // 备注
+  inService: boolean; // 是否在使用
+  retiredDate?: string; // 退役日期 timestamp
+  sellingPrice?: number; // 出售价格
+  specifiedDailyPrice?: number; // 指定每日价格
+  images?: string[]; // 物品图片
+  otherExpenses?: { // 其他费用
+    name: string; // 费用名称
+    price: number; // 费用价格
+    date: string; // 费用日期 timestamp
+  }[];
 }
 
 export type Category = {
-  id: number;
-  name: string;
-  icon: IconName;
+  id: number; // 分类id
+  name: string; // 分类名称
+  icon: IconName; // 分类图标
 }
 
 export type Assets = AssetItemData[];

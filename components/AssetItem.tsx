@@ -1,18 +1,20 @@
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useMemo } from 'react';
 import { View, Text, StyleSheet, Pressable, Animated } from 'react-native';
 
 import { IconSymbol } from '@/components/ui/IconSymbol';
 
 import { useRouter } from 'expo-router';
-import { useDispatch } from 'react-redux';
+import { useDispatch, useSelector } from 'react-redux';
 import { ColorScheme, useColorScheme } from '@/hooks/useColorScheme';
+
+import { formatDate } from '@/utils';
 
 import { Colors } from '@/constants/Colors';
 import { ICON } from '@/constants/Icon';
 import { createDddAssetAction, createDeleteAssetAction, createUpdateAssetAction } from '@/store/actionCreator/assetsActionCreator';
 import * as ASSETS_ACTIONS from '@/store/actions/assetsActions';
 
-import { AssetItemData } from '@/store/type';
+import { AssetItemData, Category, Store } from '@/store/type';
 type Props = {
   data: AssetItemData
 }
@@ -22,10 +24,20 @@ export default function AssetItem({ data }: Props) {
   const theme = useColorScheme();
   const styles = createStyles(theme);
   const dispatch = useDispatch();
+  const categories = useSelector((state: Store) => state.categories);
   const [showDetail, setShowDetail] = useState<boolean>(false);
   const [isFavorite, setIsFavorite] = useState<boolean>(data.favorite || false);
   const contentHeight = useRef(80);
   const heightAnim = useRef(new Animated.Value(contentHeight.current)).current;
+
+  const { category, days, totalPrice, dailyCost } = useMemo(() => {
+    const now = new Date().getTime();
+    const days = Math.floor((now - Number(data.purchaseDate)) / (1000 * 60 * 60 * 24));
+    const totalPrice = data.otherExpenses?.reduce((acc, expense) => acc + expense.price, data.purchasePrice) || data.purchasePrice;
+    const dailyCost = (totalPrice / days).toFixed(2);
+    const category = categories.find(c => c.id === data.categoryId);
+    return { category, days, totalPrice, dailyCost };
+  }, [data]);
 
   const handleToggleDetail = () => {
     setShowDetail(prev => !prev);
@@ -55,8 +67,15 @@ export default function AssetItem({ data }: Props) {
     });
   }
 
+  const handleSetRetired = () => {
+    dispatch(createUpdateAssetAction({
+      ...data,
+      retiredDate: new Date().toISOString(),
+    }));
+  }
+
   const handleDelete = () => {
-    
+
   }
 
   return (
@@ -66,7 +85,7 @@ export default function AssetItem({ data }: Props) {
       <Animated.View
         style={[
           styles.assetItemContainer,
-          data.retired && styles.retiredAssetItemContainer,
+          data.retiredDate ? styles.retiredAssetItemContainer : null,
           { height: heightAnim }
         ]}
       >
@@ -77,14 +96,14 @@ export default function AssetItem({ data }: Props) {
           <View style={styles.infoContainer}>
             <Text style={[styles.name, styles.whiteColor]}>{data.name}</Text>
             <Text style={[styles.price, styles.whiteColor]}>
-              ${data.price.toFixed(2)}  ·  ${data.dailyCost.toFixed(1)}/Day
+              ${data.purchasePrice.toFixed(2)}  ·  ${dailyCost}/Day
             </Text>
           </View>
           <View style={styles.daysContainer}>
-            {data.retired && (
+            {data.retiredDate ? (
               <Text style={[styles.retiredText, styles.whiteColor]}>Retired</Text>
-            )}
-            <Text style={[styles.days, styles.whiteColor]}>{data.days}Days</Text>
+            ) : null}
+            <Text style={[styles.days, styles.whiteColor]}>{days}Days</Text>
           </View>
         </View>
         <View
@@ -96,7 +115,7 @@ export default function AssetItem({ data }: Props) {
           <Text style={styles.detailContainerTitle}>Purchase Information</Text>
           <View style={styles.detailItem}>
             <Text style={styles.detailItemTitle}>Purchase Date</Text>
-            <Text style={styles.detailItemValue}>{data.purchaseDate}</Text>
+            <Text style={styles.detailItemValue}>{formatDate(data.purchaseDate)}</Text>
           </View>
           <View style={styles.detailItem}>
             <Text style={styles.detailItemTitle}>Purchase Price</Text>
@@ -104,21 +123,25 @@ export default function AssetItem({ data }: Props) {
           </View>
           <View style={styles.detailItem}>
             <Text style={styles.detailItemTitle}>Total Price</Text>
-            <Text style={styles.detailItemValue}>${data.totalPrice.toFixed(2)}</Text>
+            <Text style={styles.detailItemValue}>${totalPrice.toFixed(2)}</Text>
           </View>
-          <View style={styles.detailItem}>
-            <Text style={styles.detailItemTitle}>Category</Text>
-            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4 }}>
-              <IconSymbol name={data.category.icon} size={20} color='white' />
-              <Text style={styles.detailItemValue}>{data.category.name}</Text>
-            </View>
-          </View>
-          {data.retired && (
+          {
+            category ? (
+              <View style={styles.detailItem}>
+                <Text style={styles.detailItemTitle}>Category</Text>
+                <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4 }}>
+                  <IconSymbol name={category.icon} size={20} color='white' />
+                  <Text style={styles.detailItemValue}>{category.name}</Text>
+                </View>
+              </View>
+            ) : null
+          }
+          {data.retiredDate ? (
             <View style={styles.detailItem}>
               <Text style={styles.detailItemTitle}>Retire Date</Text>
-              <Text style={styles.detailItemValue}>{data.retiredDate}</Text>
+              <Text style={styles.detailItemValue}>{formatDate(data.retiredDate)}</Text>
             </View>
-          )}
+          ) : null}
           <View style={styles.divider} />
           {data.note && (
             <>
@@ -142,6 +165,16 @@ export default function AssetItem({ data }: Props) {
                 <Text style={styles.actionText}>Edit</Text>
               </View>
             </Pressable>
+            {
+              !data.retiredDate ? (
+                <Pressable onPress={handleSetRetired}>
+                  <View style={styles.actionItem}>
+                    <IconSymbol name={ICON['xmark.circle']} size={26} color='white' />
+                    <Text style={styles.actionText}>Retired</Text>
+                  </View>
+                </Pressable>
+              ) : null
+            }
             <Pressable onPress={handleDelete}>
               <View style={styles.actionItem}>
                 <IconSymbol name={ICON['trash']} size={26} color='white' />

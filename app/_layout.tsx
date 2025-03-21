@@ -44,6 +44,7 @@ function RootLayout() {
 
 export default function RootLayoutWrapper() {
   const { store, persistor } = createStore();
+  // persistor.purge(); // 清除持久化数据，如退出登录的时候可以执行
   return (
     <Provider store={store}>
       <PersistGate loading={null} persistor={persistor}>

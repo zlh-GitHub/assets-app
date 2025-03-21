@@ -120,7 +120,7 @@ const createStyles = (theme: ColorScheme) => StyleSheet.create({
     marginBottom: 20,
   },
   categoryList: {
-    backgroundColor: Colors[theme].categoryListBackground,
+    // backgroundColor: Colors[theme].background,
     borderRadius: 10,
   },
   addCategory: {

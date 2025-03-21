@@ -11,7 +11,8 @@ export const Colors = {
   light: {
     text: '#11181C', // 文字颜色
     primaryColor: themeColor, // 主题颜色
-    background: '#f2f1f5', // 背景颜色
+    background: '#fff', // 页面背景颜色
+    modalBackground: '#f2f1f5', // 弹窗页面背景颜色
     formBackground: '#fff', // 表单背景颜色
     divider: '#e0e0e0', // 分割线颜色
     placeholderTextColor: 'gray', // 输入框 placeholder 颜色
@@ -20,12 +21,12 @@ export const Colors = {
     bottomBarColor: '#3466dd',
     tabIconDefault: '#687076',
     tabIconSelected: tintColorLight,
-    categoryListBackground: '#f0f0f0',
   },
   dark: {
     text: '#ECEDEE',
     primaryColor: themeColor,
-    background: '#1c1c1e',
+    background: '#000', // 页面背景颜色
+    modalBackground: '#1c1c1e', // 弹窗页面背景颜色
     formBackground: '#2c2c2e', // 表单背景颜色
     divider: '#3b3b3d', // 分割线颜色
     placeholderTextColor: 'gray', // 输入框 placeholder 颜色
@@ -34,6 +35,5 @@ export const Colors = {
     bottomBarColor: 'white',
     tabIconDefault: '#9BA1A6',
     tabIconSelected: tintColorDark,
-    categoryListBackground: '#1c1c1e',
   },
 };

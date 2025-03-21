@@ -1,4 +1,4 @@
-import { useReducer, useEffect } from 'react';
+import { useReducer, useEffect, useState } from 'react';
 import {
   View,
   Text,
@@ -33,6 +33,7 @@ const ACTIONS = {
   SET_IN_SERVICE: 'setInService',
   SET_NAME: 'setName',
   SET_PRICE: 'setPrice',
+  SET_NOTE: 'setNote',
 }
 
 const reducer = (state: AssetItemData, action: { type: string, payload: any }) => {
@@ -53,6 +54,8 @@ const reducer = (state: AssetItemData, action: { type: string, payload: any }) =
       return { ...state, name: action.payload };
     case ACTIONS.SET_PRICE:
       return { ...state, price: action.payload };
+    case ACTIONS.SET_NOTE:
+      return { ...state, note: action.payload };
     default:
       return state;
   }
@@ -67,6 +70,9 @@ export default function AddProduct() {
   const styles = createStyles(colorScheme);
 
   const [formData, dispatch] = useReducer(reducer, data);
+  const [setWarrantyDate, toggleSetWarrantyDate] = useState<boolean>(!!formData.warrantyDate);
+  const [setDailyPrice, toggleSetDailyPrice] = useState<boolean>(!!formData.dailyPrice);
+  const [setUsageCount, toggleSetUsageCount] = useState<boolean>(!!formData.usageCount);
 
   const handleSelectIcon = () => {
     console.log('select icon');
@@ -88,15 +94,19 @@ export default function AddProduct() {
     console.log('set daily price');
   }
 
-  const handleSetInService = () => {
-    console.log('set in service');
+  const handleSetInService = (value: boolean) => {
+    dispatch({ type: ACTIONS.SET_IN_SERVICE, payload: value });
   }
 
   const onChangeNameHandler = (text: string) => {
     dispatch({ type: ACTIONS.SET_NAME, payload: text });
   }
 
-  const onChangePriceHandler = (text: string) => {
+  const onChangeNoteHandler = (text: string) => {
+    dispatch({ type: ACTIONS.SET_NOTE, payload: text });
+  }
+
+  const onChangePurchasePriceHandler = (text: string) => {
     dispatch({ type: ACTIONS.SET_PRICE, payload: text });
   }
 
@@ -125,7 +135,7 @@ export default function AddProduct() {
   }, [type]);
 
   return (
-    <SafeAreaThemedView style={{ flex: 1 }}>
+    <SafeAreaThemedView style={{ flex: 1, backgroundColor: Colors[colorScheme].modalBackground }}>
       <KeyboardAvoidingView
         style={{ flex: 1 }}
         behavior="padding"
@@ -134,7 +144,6 @@ export default function AddProduct() {
         <ScrollView
           style={styles.container}
           contentContainerStyle={{
-            backgroundColor: Colors[colorScheme].background,
             alignItems: 'center',
             paddingHorizontal: 12,
             paddingTop: 30,
@@ -165,8 +174,8 @@ export default function AddProduct() {
             <View style={styles.divider} />
             <TextInput
               style={[styles.subFormItem, styles.subFormItemInput]}
-              value={formData.price}
-              onChangeText={onChangePriceHandler}
+              value={formData.purchasePrice}
+              onChangeText={onChangePurchasePriceHandler}
               keyboardType="numeric"
               placeholder="Price"
               placeholderTextColor={Colors[colorScheme].placeholderTextColor}
@@ -183,59 +192,81 @@ export default function AddProduct() {
             <View style={styles.subFormItem}>
               <Text style={styles.formItemTitle}>Set Warranty Date</Text>
               <View style={styles.formItemValue}>
-                <Switch />
+                <Switch value={setWarrantyDate} onValueChange={toggleSetWarrantyDate} />
               </View>
             </View>
-            <View style={styles.subFormItem}>
-              <Text style={styles.formItemTitle}>Warranty End Date</Text>
-              <View style={styles.formItemValue}>
-                <Switch />
-              </View>
-            </View>
+            {
+              setWarrantyDate ? (
+                <View style={styles.subFormItem}>
+                  <Text style={styles.formItemTitle}>Warranty End Date</Text>
+                  <View style={styles.formItemValue}>
+                    <Switch />
+                  </View>
+                </View>) : null
+            }
           </View>
           <View style={styles.subForm}>
             <View style={styles.subFormItem}>
               <Text style={styles.formItemTitle}>Calculate by Usage Count</Text>
               <View style={styles.formItemValue}>
-                <Switch />
+                <Switch value={setUsageCount} onValueChange={toggleSetUsageCount} />
               </View>
             </View>
-            <View style={styles.subFormItem}>
-              <Text style={styles.formItemTitle}>Estimated Usage Count</Text>
-              <View style={styles.formItemValue}>
-                <Pressable>
-                  <IconSymbol name={ICON['minus.circle.fill']} size={28} color="gray" />
-                </Pressable>
-                <Text style={styles.formItemValueText}>100</Text>
-                <Pressable>
-                  <IconSymbol name={ICON['plus.circle.fill']} size={28} color={Colors[colorScheme].primaryColor} />
-                </Pressable>
-              </View>
-            </View>
+            {
+              setUsageCount ? (
+                <View style={styles.subFormItem}>
+                  <Text style={styles.formItemTitle}>Estimated Usage Count</Text>
+                  <View style={styles.formItemValue}>
+                    <Pressable>
+                      <IconSymbol name={ICON['minus.circle.fill']} size={28} color="gray" />
+                    </Pressable>
+                    <Text style={styles.formItemValueText}>100</Text>
+                    <Pressable>
+                      <IconSymbol name={ICON['plus.circle.fill']} size={28} color={Colors[colorScheme].primaryColor} />
+                    </Pressable>
+                  </View>
+                </View>
+              ) : null
+            }
           </View>
           <View style={styles.subForm}>
             <View style={styles.subFormItem}>
               <Text style={styles.formItemTitle}>Specified Daily Price</Text>
               <View style={styles.formItemValue}>
-                <Switch />
+                <Switch value={setDailyPrice} onValueChange={toggleSetDailyPrice} />
               </View>
             </View>
-            <View style={styles.subFormItem}>
-              <TextInput
-                style={styles.subFormItemInput}
-                value={formData.dailyPrice}
-                onChangeText={onChangeDailyPriceHandler}
-                keyboardType="numeric"
-                placeholder="Daily Price"
-                placeholderTextColor={Colors[colorScheme].placeholderTextColor}
-              />
-            </View>
+            {
+              setDailyPrice ? (
+                <View style={styles.subFormItem}>
+                  <TextInput
+                    style={styles.subFormItemInput}
+                    value={formData.dailyPrice}
+                    onChangeText={onChangeDailyPriceHandler}
+                    keyboardType="numeric"
+                    placeholder="Daily Price"
+                    placeholderTextColor={Colors[colorScheme].placeholderTextColor}
+                  />
+                </View>) : null
+            }
           </View>
-          <View style={styles.formItem}>
-            <Text style={styles.formItemTitle}>In Service</Text>
-            <View style={styles.formItemValue}>
-              <Switch />
+          <View style={styles.subForm}>
+            <View style={styles.subFormItem}>
+              <Text style={styles.formItemTitle}>In Service</Text>
+              <View style={styles.formItemValue}>
+                <Switch value={formData.inService} onValueChange={handleSetInService} />
+              </View>
             </View>
+            {
+              !formData.inService ? (
+                <View style={styles.subFormItem}>
+                  <Text style={styles.formItemTitle}>Retired Date</Text>
+                  <View style={styles.formItemValue}>
+                    <Switch />
+                  </View>
+                </View>
+              ) : null
+            }
           </View>
           <View style={styles.addImage}>
             <Text style={styles.addImageTitle}>Add Image</Text>
@@ -252,12 +283,14 @@ export default function AddProduct() {
               placeholder="Note..."
               placeholderTextColor={Colors[colorScheme].placeholderTextColor}
               multiline={true}
+              value={formData.note}
+              onChangeText={onChangeNoteHandler}
             />
           </View>
         </ScrollView>
         {
           type === ASSETS_ACTIONS.ADD_ASSET ? (
-            <Pressable style={{ width: '100%', paddingHorizontal: 12 }}>
+            <Pressable style={{ width: '100%', paddingHorizontal: 12, backgroundColor: Colors[colorScheme].modalBackground }}>
               <View style={styles.saveButton}>
                 <Text style={styles.saveButtonText}>Add</Text>
               </View>
@@ -372,6 +405,7 @@ const createStyles = (theme: ColorScheme) => StyleSheet.create({
     paddingVertical: 18,
   },
   noteInput: {
+    height: 100,
     fontSize,
     color: Colors[theme].text,
   },
