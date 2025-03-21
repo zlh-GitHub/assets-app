@@ -9,9 +9,13 @@ const themeColor = '#3466de';
 
 export const Colors = {
   light: {
-    text: '#11181C',
+    text: '#11181C', // 文字颜色
     primaryColor: themeColor, // 主题颜色
-    background: '#fff',
+    background: '#f2f1f5', // 背景颜色
+    formBackground: '#fff', // 表单背景颜色
+    divider: '#e0e0e0', // 分割线颜色
+    placeholderTextColor: 'gray', // 输入框 placeholder 颜色
+    addImageButtonBackground: '#f2f2f6', // 添加图片按钮背景颜色
     tint: tintColorLight,
     bottomBarColor: '#3466dd',
     tabIconDefault: '#687076',
@@ -21,7 +25,11 @@ export const Colors = {
   dark: {
     text: '#ECEDEE',
     primaryColor: themeColor,
-    background: 'black',
+    background: '#1c1c1e',
+    formBackground: '#2c2c2e', // 表单背景颜色
+    divider: '#3b3b3d', // 分割线颜色
+    placeholderTextColor: 'gray', // 输入框 placeholder 颜色
+    addImageButtonBackground: '#1c1c1e', // 添加图片按钮背景颜色
     tint: tintColorDark,
     bottomBarColor: 'white',
     tabIconDefault: '#9BA1A6',

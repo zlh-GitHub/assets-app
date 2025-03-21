@@ -5,29 +5,11 @@ import { IconSymbol } from '@/components/ui/IconSymbol';
 import { IconName } from '@/constants/Icon';
 import React, { useState, useRef } from 'react';
 import { useRouter } from 'expo-router';
-import { deleteItem, setItemFavorite } from '@/app/(tabs)/assets/mock-data';
+import { useDispatch } from 'react-redux';
+import { createDddAssetAction, createDeleteAssetAction, createUpdateAssetAction } from '@/store/actionCreator/assetsActionCreator';
+import * as ASSETS_ACTIONS from '@/store/actions/assetsActions';
 
-export type AssetItemData = {
-  id: number;
-  name: string;
-  price: number;
-  dailyCost: number;
-  days: number;
-  icon: IconName;
-  purchaseDate: string;
-  purchasePrice: number;
-  totalPrice: number;
-  favorite?: boolean;
-  category: {
-    id: number;
-    name: string;
-    icon: IconName;
-  },
-  note?: string;
-  retired?: boolean;
-  retiredDate?: string;
-}
-
+import { AssetItemData } from '@/store/type';
 type Props = {
   data: AssetItemData
 }
@@ -36,6 +18,7 @@ export default function AssetItem({ data }: Props) {
   const router = useRouter();
   const theme = useColorScheme();
   const styles = createStyles(theme);
+  const dispatch = useDispatch();
   const [showDetail, setShowDetail] = useState<boolean>(false);
   const [isFavorite, setIsFavorite] = useState<boolean>(data.favorite || false);
   const contentHeight = useRef(80);
@@ -53,7 +36,10 @@ export default function AssetItem({ data }: Props) {
 
   const handleToggleFavorite = () => {
     setIsFavorite(prev => !prev);
-    setItemFavorite(data.id, isFavorite);
+    dispatch(createUpdateAssetAction({
+      ...data,
+      favorite: !isFavorite,
+    }));
   }
 
   const handleEdit = () => {
@@ -61,12 +47,13 @@ export default function AssetItem({ data }: Props) {
       pathname: '/assets/edit-asset',
       params: {
         data: JSON.stringify(data),
+        type: ASSETS_ACTIONS.UPDATE_ASSET,
       },
     });
   }
 
   const handleDelete = () => {
-    deleteItem(data.id);
+    
   }
 
   return (

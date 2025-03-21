@@ -1,20 +1,21 @@
-import { View, Text, Pressable, StyleSheet, ScrollView, Animated } from 'react-native';
-import { useNavigation, useRouter } from 'expo-router';
+
 import { useEffect, useState, useCallback, useRef } from 'react';
+import { View, Text, Pressable, StyleSheet, ScrollView, Animated } from 'react-native';
 
-import { Colors } from '@/constants/Colors';
-import { useColorScheme, ColorScheme } from '@/hooks/useColorScheme';
-import { useBottomTabOverflow } from '@/components/ui/TabBarBackground';
-
-import { HeaderRightText, CategoryActions } from '@/constants/Category';
-import { ICON_MAPPING, ICONS } from '@/constants/Icon';
 import { IconSymbol } from '@/components/ui/IconSymbol';
-import ListItem from './list-item';
 import { SafeAreaThemedView } from '@/components/SafeAreaThemedView';
+import ListItem from './list-item';
 
-interface IEditCategory {
-  (...args: [type: CategoryActions.Add] | [type: CategoryActions.Edit, categoryId: number]): void
-}
+import { useNavigation, useRouter } from 'expo-router';
+import { useBottomTabOverflow } from '@/components/ui/TabBarBackground';
+import { useColorScheme, ColorScheme } from '@/hooks/useColorScheme';
+import { useSelector } from 'react-redux';
+
+import { HeaderRightText } from '@/constants/Category';
+import { ICON } from '@/constants/Icon';
+import * as CATEGORY_ACTIONS from '@/store/actions/categoryActions';
+import { Colors } from '@/constants/Colors'
+import { Store } from '@/store/type';
 
 interface IHeaderRightClick {
   (status: HeaderRightText): void
@@ -42,18 +43,14 @@ export default function App() {
   const navigation = useNavigation();
   const router = useRouter();
   const bottom = useBottomTabOverflow();
+  const categories = useSelector((state: Store) => state.categories);
   const [isEdit, setIsEdit] = useState(false); // 管理分类是否处于编辑状态
-  const categoryData = new Array(6).fill(1).map((_, index) => ({ id: index, icon: ICONS[index], name: `category-${index}` }));
 
-  // 1. 为啥使用函数重载会提示标识符重复？
-  // 2. 下面代码会提示需要两个参数
-  // const handleAddOrEditCategory = <T extends CategoryActions>(type: T, categoryId: T extends CategoryActions.Edit ? number : undefined) => {}
-  const handleAddOrEditCategory: IEditCategory = (...args) => {
-    const [type, categoryId] = args;
+  const handleAddCategory = () => {
     router.push({
       pathname: '/personal/edit-category',
       params: {
-        id: type === CategoryActions.Edit ? categoryId : undefined,
+        type: CATEGORY_ACTIONS.ADD_CATEGORY,
       },
     });
   }
@@ -85,15 +82,15 @@ export default function App() {
         </Text>
         <View style={styles.categoryList}>
           {
-            categoryData.map(item => (
+            categories.map(item => (
               <ListItem key={item.id} data={item} isEdit={isEdit} />
             ))
 
           }
-          <Pressable onPress={() => handleAddOrEditCategory(CategoryActions.Add)}>
+          <Pressable onPress={handleAddCategory}>
             <View style={styles.addCategory}>
               <IconSymbol
-                name='plus.circle.fill'
+                name={ICON['plus.circle.fill']}
                 color={Colors[colorScheme].primaryColor}
                 size={26}
               />

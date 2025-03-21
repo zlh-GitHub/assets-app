@@ -1,23 +1,21 @@
 import React from "react";
 import { View, Text, StyleSheet, Pressable } from "react-native";
-import { Colors } from "@/constants/Colors";
-import { useRouter } from "expo-router";
-import { useColorScheme, ColorScheme } from "@/hooks/useColorScheme";
+
 import { IconSymbol } from "@/components/ui/IconSymbol";
 
-export type CategoryData = {
-  id: number,
-  name: string,
-  icon: import('expo-symbols').SymbolViewProps['name'],
-}
+import { useRouter } from "expo-router";
+import { useColorScheme, ColorScheme } from "@/hooks/useColorScheme";
+
+import { Colors } from "@/constants/Colors";
+import { Category } from "@/store/type";
+import * as CATEGORY_ACTIONS from '@/store/actions/categoryActions';
 
 type Props = {
-  data: CategoryData,
+  data: Category,
   isEdit: boolean
 }
 
 export default function ListItem(props: Props) {
-  console.log(props)
   // 速记属性 "id" 的范围内不存在任何值。请声明一个值或提供一个初始值设定项。
   // 这是因为 解构 props 的时候 data = { id } 是给 data 一个默认值
   // 如果 props.data 不存在就使用 { id: someting }，这里的 id 并没有在当前作用域中定义，所以 TS 报错
@@ -28,11 +26,13 @@ export default function ListItem(props: Props) {
   const colorScheme = useColorScheme();
   // 统一管理样式
   const styles = createStyles(colorScheme);
+
   const onPressHandle = () => {
     router.push({
       pathname: '/personal/edit-category',
       params: {
-        id,
+        data: JSON.stringify(data),
+        type: CATEGORY_ACTIONS.UPDATE_CATEGORY,
       },
     });
   }

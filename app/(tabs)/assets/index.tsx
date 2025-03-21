@@ -22,9 +22,9 @@ import { SafeAreaThemedView } from "@/components/SafeAreaThemedView";
 import { Colors } from "@/constants/Colors";
 import { IconSymbol } from '@/components/ui/IconSymbol';
 import { useBottomTabOverflow } from '@/components/ui/TabBarBackground';
-import AssetItem, { AssetItemData } from '@/components/AssetItem';
-
-import { MOCK_ASSETS } from './mock-data';
+import AssetItem from '@/components/AssetItem';
+import { useSelector, useDispatch, useStore } from 'react-redux';
+import { Store } from '@/store/type';
 
 const { width } = Dimensions.get('window');
 
@@ -56,6 +56,7 @@ const FILTER_TYPE = [{
 
 
 export default function HomeScreen() {
+  const assets = useSelector((state: Store) => state.assets);
   const colorScheme = useColorScheme();
   const styles = createStyles(colorScheme);
   const [searchIng, setSearchIng] = useState(false);
@@ -103,7 +104,7 @@ export default function HomeScreen() {
                     placeholderTextColor='#ffffff4d'
                     textAlign='left'
                     onChange={searchInputOnChangeHandle}
-                    clearButtonMode='while-editing' // 当编辑的时候 input 框右边显示清楚按钮
+                    clearButtonMode='while-editing' // 当编辑的时候 input 框右边显示清除按钮
                     selectionColor="#FFF"
                     autoFocus
                   />
@@ -173,7 +174,7 @@ export default function HomeScreen() {
           contentContainerStyle={{ paddingBottom: bottom }} // 底部留白，防止底部内容被TabBar遮挡
         >
           {
-            MOCK_ASSETS.map((item) => (
+            assets.map((item) => (
               <AssetItem key={item.id} data={item} />
             ))
           }

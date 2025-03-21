@@ -11,6 +11,7 @@ export const ICON_MAPPING = {
   // See MaterialIcons here: https://icons.expo.fyi
   // See SF Symbols in the SF Symbols app on Mac.
   'plus.circle.fill': 'add-circle',
+  'minus.circle.fill': 'remove-circle',
   'creditcard.fill': 'credit-card',
   'person.fill': 'person',
   'chevron.right': 'keyboard-arrow-right',
@@ -24,11 +25,11 @@ export const ICON_MAPPING = {
   'airpods.pro': 'headphones',
   'appletv.fill': 'tv',
   'homepod.and.homepod.mini': 'multitrack-audio',
-  'minus.circle.fill': 'remove-circle',
   'pencil': 'edit',
   'star': 'star-border',
   'star.fill': 'star',
   'trash': 'delete-outline',
+  'photo.on.rectangle.angled': 'photo-library',
 } as Partial<
   Record<
   IconName,
@@ -36,6 +37,9 @@ export const ICON_MAPPING = {
   >
 >;
 
-
-
 export const ICONS = Object.keys(ICON_MAPPING) as IconName[];
+
+export const ICON = ICONS.reduce((res, icon) => {
+  res[icon] = icon;
+  return res;
+}, {} as Record<IconName, IconName>);
