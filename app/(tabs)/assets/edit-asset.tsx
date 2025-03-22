@@ -1,4 +1,4 @@
-import { useReducer, useEffect, useState } from 'react';
+import React, { useReducer, useEffect, useState, useRef } from 'react';
 import {
   View,
   Text,
@@ -8,15 +8,24 @@ import {
   ScrollView,
   KeyboardAvoidingView,
   StyleSheet,
+  Image,
+  NativeSyntheticEvent,
+  TextInputEndEditingEventData,
 } from 'react-native';
 
+import * as ImagePicker from 'expo-image-picker';
+import { launchCamera, launchImageLibrary } from 'react-native-image-picker';
 import { SafeAreaThemedView } from '@/components/SafeAreaThemedView';
 import { IconSymbol } from '@/components/ui/IconSymbol';
 import HeaderTextButton from '@/components/HeaderTextButton';
+import DateTimePicker, { DateTimePickerEvent } from '@react-native-community/datetimepicker';
 
 import { useLocalSearchParams, useNavigation, useRouter } from 'expo-router';
 import { useColorScheme, ColorScheme } from '@/hooks/useColorScheme';
 import useLatest from '@/hooks/useLatest';
+import { useDispatch } from 'react-redux';
+
+import { formatPrice, validatePrice } from '@/utils';
 
 import { Colors } from '@/constants/Colors';
 import { ICON } from '@/constants/Icon';
@@ -28,42 +37,90 @@ const ACTIONS = {
   SET_ICON: 'setIcon',
   SET_CATEGORY: 'setCategory',
   SET_WARRANTY_DATE: 'setWarrantyDate',
-  SET_USAGE_COUNT: 'setUsageCount',
+  INCREASE_USAGE_COUNT: 'increaseUsageCount',
+  DECREASE_USAGE_COUNT: 'decreaseUsageCount',
   SET_DAILY_PRICE: 'setDailyPrice',
   SET_IN_SERVICE: 'setInService',
   SET_NAME: 'setName',
-  SET_PRICE: 'setPrice',
+  SET_PURCHASE_PRICE: 'setPurchasePrice',
   SET_NOTE: 'setNote',
+  SET_PURCHASE_DATE: 'setPurchaseDate',
+  SET_RETIRED_DATE: 'setRetiredDate',
+  SET_IMAGE: 'setImage',
 }
 
-const reducer = (state: AssetItemData, action: { type: string, payload: any }) => {
+const reducer = (state: AssetItemData, action: { type: string, payload?: any }) => {
   switch (action.type) {
     case ACTIONS.SET_ICON:
       return { ...state, icon: action.payload };
     case ACTIONS.SET_CATEGORY:
-      return { ...state, category: action.payload };
+      return { ...state, categoryId: action.payload };
     case ACTIONS.SET_WARRANTY_DATE:
       return { ...state, warrantyDate: action.payload };
-    case ACTIONS.SET_USAGE_COUNT:
-      return { ...state, usageCount: action.payload };
+    case ACTIONS.INCREASE_USAGE_COUNT:
+      return { ...state, usageCount: (state.usageCount || 0) + 1 };
+    case ACTIONS.DECREASE_USAGE_COUNT:
+      return { ...state, usageCount: (state.usageCount || 0) - 1 };
     case ACTIONS.SET_DAILY_PRICE:
       return { ...state, dailyPrice: action.payload };
     case ACTIONS.SET_IN_SERVICE:
       return { ...state, inService: action.payload };
     case ACTIONS.SET_NAME:
       return { ...state, name: action.payload };
-    case ACTIONS.SET_PRICE:
-      return { ...state, price: action.payload };
+    case ACTIONS.SET_PURCHASE_PRICE:
+      return { ...state, purchasePrice: action.payload };
     case ACTIONS.SET_NOTE:
       return { ...state, note: action.payload };
+    case ACTIONS.SET_PURCHASE_DATE:
+      return { ...state, purchaseDate: action.payload };
+    case ACTIONS.SET_RETIRED_DATE:
+      return { ...state, retiredDate: action.payload };
+    case ACTIONS.SET_IMAGE:
+      return { ...state, image: action.payload };
     default:
       return state;
   }
 };
 
-export default function AddProduct() {
+/**
+ * 验证表单数据
+ * @param formData 表单数据
+ * @returns 错误信息
+ */
+const validateFormData = (formData: AssetItemData) => {
+  const errors = [];
+  const { icon, categoryId, purchasePrice, dailyPrice, name, specifiedDailyPrice, purchaseDate, retiredDate } = formData;
+  if (!icon) {
+    errors.push('Icon is required');
+  }
+  if (!categoryId) {
+    errors.push('Category is required');
+  }
+  if (!name) {
+    errors.push('Name is required');
+  }
+  if (!validatePrice(purchasePrice)) {
+    errors.push('Invalid purchase price');
+  }
+  if (dailyPrice && !validatePrice(dailyPrice)) {
+    errors.push('Invalid daily price');
+  }
+  if (specifiedDailyPrice && !validatePrice(specifiedDailyPrice)) {
+    errors.push('Invalid specified daily price');
+  }
+  if (retiredDate && purchaseDate > retiredDate) {
+    errors.push('Purchase date must be before retired date');
+  }
+  if (errors.length > 0) {
+    return errors;
+  }
+  return true;
+}
+
+export default function EditAsset() {
   const navigation = useNavigation();
   const router = useRouter();
+  const storeDispatch = useDispatch();
   const { data: paramsData, type } = useLocalSearchParams();
   const data = paramsData ? JSON.parse(paramsData as string) : {};
   const colorScheme = useColorScheme();
@@ -74,6 +131,11 @@ export default function AddProduct() {
   const [setDailyPrice, toggleSetDailyPrice] = useState<boolean>(!!formData.dailyPrice);
   const [setUsageCount, toggleSetUsageCount] = useState<boolean>(!!formData.usageCount);
 
+  const purchasePriceRef = useRef<TextInput>(null);
+  const [purchasePriceError, setPurchasePriceError] = useState<string>('');
+  const dailyPriceRef = useRef<TextInput>(null);
+  const [dailyPriceError, setDailyPriceError] = useState<string>('');
+
   const handleSelectIcon = () => {
     console.log('select icon');
   }
@@ -82,12 +144,19 @@ export default function AddProduct() {
     console.log('set category');
   }
 
-  const handleSetWarrantyDate = () => {
-    console.log('set warranty date');
+  enum SET_USAGE_COUNT_TYPE {
+    INCREASE = 'increase',
+    DECREASE = 'decrease',
   }
-
-  const handleSetUsageCount = () => {
-    console.log('set usage count');
+  const handleSetUsageCount = (type: SET_USAGE_COUNT_TYPE) => {
+    if (type === SET_USAGE_COUNT_TYPE.DECREASE && formData.usageCount === 0) {
+      return;
+    }
+    dispatch({
+      type: type === SET_USAGE_COUNT_TYPE.INCREASE
+        ? ACTIONS.INCREASE_USAGE_COUNT
+        : ACTIONS.DECREASE_USAGE_COUNT,
+    });
   }
 
   const handleSetDailyPrice = () => {
@@ -107,18 +176,70 @@ export default function AddProduct() {
   }
 
   const onChangePurchasePriceHandler = (text: string) => {
-    dispatch({ type: ACTIONS.SET_PRICE, payload: text });
+    dispatch({ type: ACTIONS.SET_PURCHASE_PRICE, payload: Number(text) });
   }
 
   const onChangeDailyPriceHandler = (text: string) => {
-    dispatch({ type: ACTIONS.SET_DAILY_PRICE, payload: text });
+    dispatch({ type: ACTIONS.SET_DAILY_PRICE, payload: Number(text) });
   }
 
-  const handleSave = useLatest<Function>(() => {
-    console.log('save');
+  const onPurchaseDateChangeHandler = (event: DateTimePickerEvent, selectedDate: Date | undefined) => {
+    if (!selectedDate) {
+      return;
+    }
+    dispatch({ type: ACTIONS.SET_PURCHASE_DATE, payload: new Date(selectedDate).getTime() });
+  }
+
+  const onWarrantyDateChangeHandler = (event: DateTimePickerEvent, selectedDate: Date | undefined) => {
+    if (!selectedDate) {
+      return;
+    }
+    dispatch({ type: ACTIONS.SET_WARRANTY_DATE, payload: new Date(selectedDate).getTime() });
+  }
+
+  const onRetiredDateChangeHandler = (event: DateTimePickerEvent, selectedDate: Date | undefined) => {
+    if (!selectedDate) {
+      return;
+    }
+    dispatch({ type: ACTIONS.SET_RETIRED_DATE, payload: new Date(selectedDate).getTime() });
+  }
+
+  const handleAddImage = async () => {
+    const result = await ImagePicker.launchImageLibraryAsync({
+      mediaTypes: ['images'],
+      quality: 1,
+    });
+    // const result = await launchImageLibrary({
+    //   mediaType: 'photo',
+    //   selectionLimit: 1,
+    //   includeBase64: true,
+    // });
+    if (!result.canceled) {
+      dispatch({ type: ACTIONS.SET_IMAGE, payload: result.assets[0].uri });
+    }
+  }
+
+  const blurAllInputs = () => {
+    purchasePriceRef.current?.blur();
+    dailyPriceRef.current?.blur();
+  }
+
+  const handleSave = () => {
+    blurAllInputs();
+    const errors = validateFormData(formData);
+    if (errors) {
+      return;
+    };
+    storeDispatch({ type: ASSETS_ACTIONS.ADD_ASSET, payload: formData });
+    router.back();
+  };
+
+  const latestHandleUpdate = useLatest<Function>(() => {
+    storeDispatch({ type: ASSETS_ACTIONS.UPDATE_ASSET, payload: formData });
+    router.back();
   });
 
-  const handleCancel = useLatest<Function>(() => {
+  const latestHandleCancel = useLatest<Function>(() => {
     router.back();
   });
 
@@ -128,8 +249,8 @@ export default function AddProduct() {
         title: '',
         headerShown: true,
         headerTransparent: true,
-        headerRight: () => <HeaderTextButton text="Save" onClick={() => handleSave.current()} />,
-        headerLeft: () => <HeaderTextButton text="Cancel" onClick={() => handleCancel.current()} />,
+        headerRight: () => <HeaderTextButton text="Save" onClick={() => latestHandleUpdate.current()} />,
+        headerLeft: () => <HeaderTextButton text="Cancel" onClick={() => latestHandleCancel.current()} />,
       });
     }
   }, [type]);
@@ -173,8 +294,9 @@ export default function AddProduct() {
             />
             <View style={styles.divider} />
             <TextInput
+              ref={purchasePriceRef}
               style={[styles.subFormItem, styles.subFormItemInput]}
-              value={formData.purchasePrice}
+              defaultValue={formData.purchasePrice?.toString()}
               onChangeText={onChangePurchasePriceHandler}
               keyboardType="numeric"
               placeholder="Price"
@@ -184,7 +306,13 @@ export default function AddProduct() {
             <View style={[styles.subFormItem]}>
               <Text style={styles.formItemTitle}>Purchase Date</Text>
               <View style={styles.formItemValue}>
-                <Switch />
+                <DateTimePicker
+                  value={formData.purchaseDate ? new Date(Number(formData.purchaseDate)) : new Date()}
+                  testID="dateTimePicker"
+                  mode='date'
+                  is24Hour={true}
+                  onChange={onPurchaseDateChangeHandler}
+                />
               </View>
             </View>
           </View>
@@ -197,12 +325,22 @@ export default function AddProduct() {
             </View>
             {
               setWarrantyDate ? (
-                <View style={styles.subFormItem}>
-                  <Text style={styles.formItemTitle}>Warranty End Date</Text>
-                  <View style={styles.formItemValue}>
-                    <Switch />
+                <>
+                  <View style={styles.divider} />
+                  <View style={styles.subFormItem}>
+                    <Text style={styles.formItemTitle}>Warranty End Date</Text>
+                    <View style={styles.formItemValue}>
+                      <DateTimePicker
+                        value={formData.warrantyDate ? new Date(Number(formData.warrantyDate)) : new Date()}
+                        testID="dateTimePicker"
+                        mode='date'
+                        is24Hour={true}
+                        onChange={onWarrantyDateChangeHandler}
+                      />
+                    </View>
                   </View>
-                </View>) : null
+                </>
+              ) : null
             }
           </View>
           <View style={styles.subForm}>
@@ -214,18 +352,26 @@ export default function AddProduct() {
             </View>
             {
               setUsageCount ? (
-                <View style={styles.subFormItem}>
-                  <Text style={styles.formItemTitle}>Estimated Usage Count</Text>
-                  <View style={styles.formItemValue}>
-                    <Pressable>
-                      <IconSymbol name={ICON['minus.circle.fill']} size={28} color="gray" />
-                    </Pressable>
-                    <Text style={styles.formItemValueText}>100</Text>
-                    <Pressable>
-                      <IconSymbol name={ICON['plus.circle.fill']} size={28} color={Colors[colorScheme].primaryColor} />
-                    </Pressable>
+                <>
+                  <View style={styles.divider} />
+                  <View style={styles.subFormItem}>
+                    <Text style={styles.formItemTitle}>Estimated Usage Count</Text>
+                    <View style={styles.formItemValue}>
+                      <Pressable
+                        onPress={() => handleSetUsageCount(SET_USAGE_COUNT_TYPE.DECREASE)}
+                        disabled={formData.usageCount === 0}
+                      >
+                        <IconSymbol name={ICON['minus.circle.fill']} size={28} color="gray" />
+                      </Pressable>
+                      <View style={{ width: 40, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                        <Text style={styles.formItemValueText}>{formData.usageCount || 0}</Text>
+                      </View>
+                      <Pressable onPress={() => handleSetUsageCount(SET_USAGE_COUNT_TYPE.INCREASE)}>
+                        <IconSymbol name={ICON['plus.circle.fill']} size={28} color={Colors[colorScheme].primaryColor} />
+                      </Pressable>
+                    </View>
                   </View>
-                </View>
+                </>
               ) : null
             }
           </View>
@@ -238,16 +384,19 @@ export default function AddProduct() {
             </View>
             {
               setDailyPrice ? (
-                <View style={styles.subFormItem}>
+                <>
+                  <View style={styles.divider} />
                   <TextInput
-                    style={styles.subFormItemInput}
-                    value={formData.dailyPrice}
+                    ref={dailyPriceRef}
+                    style={[styles.subFormItem, styles.subFormItemInput]}
+                    value={formData.dailyPrice?.toString()}
                     onChangeText={onChangeDailyPriceHandler}
                     keyboardType="numeric"
                     placeholder="Daily Price"
                     placeholderTextColor={Colors[colorScheme].placeholderTextColor}
                   />
-                </View>) : null
+                </>
+              ) : null
             }
           </View>
           <View style={styles.subForm}>
@@ -259,23 +408,38 @@ export default function AddProduct() {
             </View>
             {
               !formData.inService ? (
-                <View style={styles.subFormItem}>
-                  <Text style={styles.formItemTitle}>Retired Date</Text>
-                  <View style={styles.formItemValue}>
-                    <Switch />
+                <>
+                  <View style={styles.divider} />
+                  <View style={styles.subFormItem}>
+                    <Text style={styles.formItemTitle}>Retired Date</Text>
+                    <View style={styles.formItemValue}>
+                      <DateTimePicker
+                        value={formData.retiredDate ? new Date(Number(formData.retiredDate)) : new Date()}
+                        testID="dateTimePicker"
+                        mode='date'
+                        is24Hour={true}
+                        onChange={onRetiredDateChangeHandler}
+                      />
+                    </View>
                   </View>
-                </View>
+                </>
               ) : null
             }
           </View>
           <View style={styles.addImage}>
             <Text style={styles.addImageTitle}>Add Image</Text>
-            <Pressable>
-              <View style={styles.addImageButton}>
-                <IconSymbol name={ICON['photo.on.rectangle.angled']} size={60} color={Colors[colorScheme].primaryColor} />
-                <Text style={styles.addImageButtonText}>Tap to Add Image</Text>
-              </View>
-            </Pressable>
+            {
+              formData.image ? (
+                <Image source={{ uri: formData.image }} style={styles.image} />
+              ) : (
+                <Pressable onPress={handleAddImage}>
+                  <View style={styles.addImageButton}>
+                    <IconSymbol name={ICON['photo.on.rectangle.angled']} size={60} color={Colors[colorScheme].primaryColor} />
+                    <Text style={styles.addImageButtonText}>Tap to Add Image</Text>
+                  </View>
+                </Pressable>
+              )
+            }
           </View>
           <View style={styles.note}>
             <TextInput
@@ -290,7 +454,10 @@ export default function AddProduct() {
         </ScrollView>
         {
           type === ASSETS_ACTIONS.ADD_ASSET ? (
-            <Pressable style={{ width: '100%', paddingHorizontal: 12, backgroundColor: Colors[colorScheme].modalBackground }}>
+            <Pressable
+              onPress={handleSave}
+              style={{ width: '100%', paddingHorizontal: 12 }}
+            >
               <View style={styles.saveButton}>
                 <Text style={styles.saveButtonText}>Add</Text>
               </View>
@@ -378,6 +545,11 @@ const createStyles = (theme: ColorScheme) => StyleSheet.create({
     paddingHorizontal: formItemPaddingValue,
     paddingVertical: 18,
   },
+  image: {
+    width: '100%',
+    aspectRatio: 1,
+    borderRadius: 10,
+  },
   addImageTitle: {
     fontSize,
     color: Colors[theme].text,
@@ -422,5 +594,11 @@ const createStyles = (theme: ColorScheme) => StyleSheet.create({
     fontSize,
     fontWeight: 'bold',
     color: 'white',
+  },
+  errorText: {
+    fontSize: 12,
+    color: 'red',
+    marginTop: 4,
+    paddingHorizontal: formItemPaddingValue,
   },
 })

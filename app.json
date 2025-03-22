@@ -25,6 +25,12 @@
       "favicon": "./assets/images/favicon.png"
     },
     "plugins": [
+      [
+        "expo-image-picker",
+        {
+          "photosPermission": "The app can access your photos so you can upload your own listings."
+        }
+      ],
       "expo-router",
       [
         "expo-splash-screen",

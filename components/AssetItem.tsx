@@ -36,7 +36,7 @@ export default function AssetItem({ data }: Props) {
     const totalPrice = data.otherExpenses?.reduce((acc, expense) => acc + expense.price, data.purchasePrice) || data.purchasePrice;
     const dailyCost = (totalPrice / days).toFixed(2);
     const category = categories.find(c => c.id === data.categoryId);
-    return { category, days, totalPrice, dailyCost };
+    return { category, days, totalPrice: totalPrice.toFixed(2), dailyCost };
   }, [data]);
 
   const handleToggleDetail = () => {
@@ -75,7 +75,7 @@ export default function AssetItem({ data }: Props) {
   }
 
   const handleDelete = () => {
-
+    dispatch(createDeleteAssetAction(data));
   }
 
   return (
@@ -96,7 +96,7 @@ export default function AssetItem({ data }: Props) {
           <View style={styles.infoContainer}>
             <Text style={[styles.name, styles.whiteColor]}>{data.name}</Text>
             <Text style={[styles.price, styles.whiteColor]}>
-              ${data.purchasePrice.toFixed(2)}  ·  ${dailyCost}/Day
+              ${data.purchasePrice?.toFixed(2)}  ·  ${dailyCost}/Day
             </Text>
           </View>
           <View style={styles.daysContainer}>
@@ -119,11 +119,11 @@ export default function AssetItem({ data }: Props) {
           </View>
           <View style={styles.detailItem}>
             <Text style={styles.detailItemTitle}>Purchase Price</Text>
-            <Text style={styles.detailItemValue}>${data.purchasePrice.toFixed(2)}</Text>
+            <Text style={styles.detailItemValue}>${data.purchasePrice?.toFixed(2)}</Text>
           </View>
           <View style={styles.detailItem}>
             <Text style={styles.detailItemTitle}>Total Price</Text>
-            <Text style={styles.detailItemValue}>${totalPrice.toFixed(2)}</Text>
+            <Text style={styles.detailItemValue}>{totalPrice}</Text>
           </View>
           {
             category ? (

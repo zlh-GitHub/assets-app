@@ -60,7 +60,11 @@ const FILTER_TYPE = [{
 
 
 export default function HomeScreen() {
-  const assets = useSelector((state: Store) => state.assets);
+  const assets = useSelector((state: Store) => {
+    const activeAssets = state.assets.filter(item => !item.retiredDate);
+    const retiredAssets = state.assets.filter(item => item.retiredDate);
+    return [...activeAssets, ...retiredAssets];
+  }); // 重新排序 assets，将 retiredDate 放在最后
   const colorScheme = useColorScheme();
   const styles = createStyles(colorScheme);
   const [searchIng, setSearchIng] = useState(false);

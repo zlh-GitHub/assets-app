@@ -4,7 +4,7 @@ import * as actions from '../actions/assetsActions';
 export default function assetsReducer(state: Assets, action: Action<AssetItemData>) {
   switch (action.type) {
     case actions.ADD_ASSET:
-      return [...state, action.payload];
+      return [...state, { ...action.payload, id: state.length + 1 }];
     case actions.DELETE_ASSET:
       return state.filter(asset => asset.id !== action.payload.id);
     case actions.UPDATE_ASSET:

@@ -16,7 +16,7 @@ export type AssetItemData = {
   retiredDate?: string; // 退役日期 timestamp
   sellingPrice?: number; // 出售价格
   specifiedDailyPrice?: number; // 指定每日价格
-  images?: string[]; // 物品图片
+  image?: string; // 物品图片
   otherExpenses?: { // 其他费用
     name: string; // 费用名称
     price: number; // 费用价格
