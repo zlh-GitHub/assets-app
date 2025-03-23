@@ -1,4 +1,4 @@
-import React, { useReducer, useEffect, useState, useRef } from 'react';
+import React, { useReducer, useEffect, useState, useRef, useCallback } from 'react';
 import {
   View,
   Text,
@@ -11,6 +11,9 @@ import {
   Image,
   NativeSyntheticEvent,
   TextInputEndEditingEventData,
+  PanResponder,
+  Animated,
+  Dimensions,
 } from 'react-native';
 
 import * as ImagePicker from 'expo-image-picker';
@@ -19,19 +22,21 @@ import { SafeAreaThemedView } from '@/components/SafeAreaThemedView';
 import { IconSymbol } from '@/components/ui/IconSymbol';
 import HeaderTextButton from '@/components/HeaderTextButton';
 import DateTimePicker, { DateTimePickerEvent } from '@react-native-community/datetimepicker';
+import CostItem from '@/components/costItem';
 
 import { useLocalSearchParams, useNavigation, useRouter } from 'expo-router';
 import { useColorScheme, ColorScheme } from '@/hooks/useColorScheme';
 import useLatest from '@/hooks/useLatest';
-import { useDispatch } from 'react-redux';
+import { useDispatch, useStore } from 'react-redux';
 
-import { formatPrice, validatePrice } from '@/utils';
+import { formatDate, formatPrice, validatePrice } from '@/utils';
+import { createAddAssetAction, createUpdateAssetAction } from '@/store/actionCreator/assetsActionCreator';
 
 import { Colors } from '@/constants/Colors';
 import { ICON } from '@/constants/Icon';
 import * as ASSETS_ACTIONS from '@/store/actions/assetsActions';
 
-import { AssetItemData } from '@/store/type';
+import { AssetItemData, CostItemData, Store } from '@/store/type';
 
 const ACTIONS = {
   SET_ICON: 'setIcon',
@@ -47,6 +52,9 @@ const ACTIONS = {
   SET_PURCHASE_DATE: 'setPurchaseDate',
   SET_RETIRED_DATE: 'setRetiredDate',
   SET_IMAGE: 'setImage',
+  UPDATE_EXTRA_COSTS: 'updateExtraCosts',
+  ADD_EXTRA_COST: 'addExtraCost',
+  DELETE_EXTRA_COST: 'deleteExtraCost',
 }
 
 const reducer = (state: AssetItemData, action: { type: string, payload?: any }) => {
@@ -77,6 +85,24 @@ const reducer = (state: AssetItemData, action: { type: string, payload?: any }) 
       return { ...state, retiredDate: action.payload };
     case ACTIONS.SET_IMAGE:
       return { ...state, image: action.payload };
+    case ACTIONS.UPDATE_EXTRA_COSTS:
+      return {
+        ...state,
+        extraCosts: state.extraCosts?.map(cost => cost.id === action.payload.id ? action.payload : cost) || [],
+      };
+    case ACTIONS.ADD_EXTRA_COST:
+      return {
+        ...state, 
+        extraCosts: [
+          ...(state.extraCosts || []),
+          { id: (state.extraCosts?.length || 0) + 1, ...action.payload },
+        ]
+      };
+    case ACTIONS.DELETE_EXTRA_COST:
+      return {
+        ...state,
+        extraCosts: state.extraCosts?.filter(cost => cost.id !== action.payload) || [],
+      };
     default:
       return state;
   }
@@ -117,24 +143,41 @@ const validateFormData = (formData: AssetItemData) => {
   return true;
 }
 
+const { width } = Dimensions.get('window');
+
 export default function EditAsset() {
   const navigation = useNavigation();
   const router = useRouter();
   const storeDispatch = useDispatch();
-  const { data: paramsData, type } = useLocalSearchParams();
-  const data = paramsData ? JSON.parse(paramsData as string) : {};
   const colorScheme = useColorScheme();
   const styles = createStyles(colorScheme);
 
+  const { data: paramsData, type } = useLocalSearchParams();
+
+  const data = paramsData ? JSON.parse(paramsData as string) : {};
   const [formData, dispatch] = useReducer(reducer, data);
-  const [setWarrantyDate, toggleSetWarrantyDate] = useState<boolean>(!!formData.warrantyDate);
-  const [setDailyPrice, toggleSetDailyPrice] = useState<boolean>(!!formData.dailyPrice);
-  const [setUsageCount, toggleSetUsageCount] = useState<boolean>(!!formData.usageCount);
 
   const purchasePriceRef = useRef<TextInput>(null);
   const [purchasePriceError, setPurchasePriceError] = useState<string>('');
   const dailyPriceRef = useRef<TextInput>(null);
   const [dailyPriceError, setDailyPriceError] = useState<string>('');
+
+  const [scrollEnabled, setScrollEnabled] = useState<boolean>(true);
+  // 在 CostItem 触摸手势开始的时候禁用 ScrollView 的滚动
+  const onPanResponderGrant = useCallback(() => {
+    // 禁止模态视图（modal presentation）的向下滑动关闭手势
+    navigation.setOptions({
+      gestureEnabled: false,
+    })
+    setScrollEnabled(false);
+  }, []);
+  // 在 CostItem 触摸手势结束的时候恢复 ScrollView 的滚动
+  const onPanResponderEnd = useCallback(() => {
+    navigation.setOptions({
+      gestureEnabled: true,
+    })
+    setScrollEnabled(true);
+  }, []);
 
   const handleSelectIcon = () => {
     console.log('select icon');
@@ -144,6 +187,7 @@ export default function EditAsset() {
     console.log('set category');
   }
 
+  const [setUsageCount, toggleSetUsageCount] = useState<boolean>(!!formData.usageCount);
   enum SET_USAGE_COUNT_TYPE {
     INCREASE = 'increase',
     DECREASE = 'decrease',
@@ -159,8 +203,9 @@ export default function EditAsset() {
     });
   }
 
-  const handleSetDailyPrice = () => {
-    console.log('set daily price');
+  const [setDailyPrice, toggleSetDailyPrice] = useState<boolean>(!!formData.dailyPrice);
+  const onChangeDailyPriceHandler = (text: string) => {
+    dispatch({ type: ACTIONS.SET_DAILY_PRICE, payload: Number(text) });
   }
 
   const handleSetInService = (value: boolean) => {
@@ -179,10 +224,6 @@ export default function EditAsset() {
     dispatch({ type: ACTIONS.SET_PURCHASE_PRICE, payload: Number(text) });
   }
 
-  const onChangeDailyPriceHandler = (text: string) => {
-    dispatch({ type: ACTIONS.SET_DAILY_PRICE, payload: Number(text) });
-  }
-
   const onPurchaseDateChangeHandler = (event: DateTimePickerEvent, selectedDate: Date | undefined) => {
     if (!selectedDate) {
       return;
@@ -190,6 +231,7 @@ export default function EditAsset() {
     dispatch({ type: ACTIONS.SET_PURCHASE_DATE, payload: new Date(selectedDate).getTime() });
   }
 
+  const [setWarrantyDate, toggleSetWarrantyDate] = useState<boolean>(!!formData.warrantyDate);
   const onWarrantyDateChangeHandler = (event: DateTimePickerEvent, selectedDate: Date | undefined) => {
     if (!selectedDate) {
       return;
@@ -202,6 +244,51 @@ export default function EditAsset() {
       return;
     }
     dispatch({ type: ACTIONS.SET_RETIRED_DATE, payload: new Date(selectedDate).getTime() });
+  }
+
+  const editCostingRef = useRef<Boolean>(false);
+  const store = useStore<Store>();
+  useEffect(() => {
+    let prevCurCost = store.getState().curCost;
+    const unsubscribe = store.subscribe(() => {
+      if (!editCostingRef.current) {
+        return;
+      }
+      editCostingRef.current = false;
+      const curCost = store.getState().curCost;
+      if (prevCurCost !== curCost) {
+        prevCurCost = curCost;
+        if (curCost?.id) {
+          dispatch({ type: ACTIONS.UPDATE_EXTRA_COSTS, payload: curCost });
+        } else {
+          dispatch({ type: ACTIONS.ADD_EXTRA_COST, payload: curCost });
+        }
+      }
+    })
+    return () => {
+      unsubscribe();
+    }
+  }, []);
+  const handleAddExtraCosts = () => {
+    editCostingRef.current = true;
+    router.push({
+      pathname: '/assets/edit-cost',
+      params: {
+        type: ASSETS_ACTIONS.ADD_COST,
+      },
+    });
+  }
+  const handleEditExtraCost = (cost: CostItemData) => {
+    editCostingRef.current = true;
+    router.push({
+      pathname: '/assets/edit-cost',
+      params: {
+        data: JSON.stringify(cost),
+      },
+    });
+  }
+  const handleDeleteExtraCost = (cost: CostItemData) => {
+    dispatch({ type: ACTIONS.DELETE_EXTRA_COST, payload: cost.id });
   }
 
   const handleAddImage = async () => {
@@ -230,12 +317,12 @@ export default function EditAsset() {
     if (errors) {
       return;
     };
-    storeDispatch({ type: ASSETS_ACTIONS.ADD_ASSET, payload: formData });
+    storeDispatch(createAddAssetAction(formData));
     router.back();
   };
 
   const latestHandleUpdate = useLatest<Function>(() => {
-    storeDispatch({ type: ASSETS_ACTIONS.UPDATE_ASSET, payload: formData });
+    storeDispatch(createUpdateAssetAction(formData));
     router.back();
   });
 
@@ -256,7 +343,9 @@ export default function EditAsset() {
   }, [type]);
 
   return (
-    <SafeAreaThemedView style={{ flex: 1, backgroundColor: Colors[colorScheme].modalBackground }}>
+    <SafeAreaThemedView
+      style={{ flex: 1, backgroundColor: Colors[colorScheme].modalBackground }}
+    >
       <KeyboardAvoidingView
         style={{ flex: 1 }}
         behavior="padding"
@@ -272,6 +361,8 @@ export default function EditAsset() {
             gap: 20,
           }}
           showsVerticalScrollIndicator={false}
+          scrollEnabled={scrollEnabled}
+          bounces={false}
         >
           <Pressable onPress={handleSelectIcon}>
             <View style={styles.selectIcon}>
@@ -425,6 +516,29 @@ export default function EditAsset() {
                 </>
               ) : null
             }
+          </View>
+          <View style={styles.extraCost}>
+            <Text style={styles.extraCostTitle}>EXTRA COSTS</Text>
+            <View style={styles.extraCostList}>
+              {
+                formData.extraCosts?.map(cost => (
+                  <CostItem
+                    key={`cost-${cost.id}`}
+                    cost={cost}
+                    onEdit={handleEditExtraCost}
+                    onDelete={handleDeleteExtraCost}
+                    onPanResponderGrant={onPanResponderGrant}
+                    onPanResponderEnd={onPanResponderEnd}
+                  />
+                ))
+              }
+              <Pressable onPress={handleAddExtraCosts}>
+                <View style={styles.addExtraCostButton}>
+                  <IconSymbol name={ICON['plus.circle.fill']} size={28} color={Colors[colorScheme].primaryColor} />
+                  <Text style={styles.addExtraCostButtonText}>Add Cost</Text>
+                </View>
+              </Pressable>
+            </View>
           </View>
           <View style={styles.addImage}>
             <Text style={styles.addImageTitle}>Add Image</Text>
@@ -600,5 +714,34 @@ const createStyles = (theme: ColorScheme) => StyleSheet.create({
     color: 'red',
     marginTop: 4,
     paddingHorizontal: formItemPaddingValue,
+  },
+  extraCost: {
+    width: '100%',
+  },
+  extraCostTitle: {
+    fontSize: 14,
+    color: Colors[theme].text,
+    marginBottom: 10,
+    paddingLeft: formItemPaddingValue,
+  },
+  extraCostList: {
+    width: '100%',
+    display: 'flex',
+    flexDirection: 'column',
+    borderRadius: 10,
+    overflow: 'hidden',
+    backgroundColor: Colors[theme].formBackground,
+  },
+  addExtraCostButton: {
+    height: 45,
+    display: 'flex',
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 10,
+    paddingHorizontal: formItemPaddingValue,
+  },
+  addExtraCostButtonText: {
+    fontSize,
+    color: Colors[theme].text,
   },
 })

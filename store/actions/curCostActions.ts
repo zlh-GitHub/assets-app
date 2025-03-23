@@ -1,0 +1,1 @@
+export const SET_CUR_COST = 'SET_CUR_COST';

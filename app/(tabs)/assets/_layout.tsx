@@ -24,6 +24,13 @@ export default function PersonalStack() {
           presentation: 'modal',
         }}
       />
+      <Stack.Screen
+        name="edit-cost"
+        options={{
+          headerShown: false,
+          presentation: 'modal',
+        }}
+      />
     </Stack>
   );
 }

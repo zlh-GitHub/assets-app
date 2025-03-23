@@ -1,7 +1,7 @@
 import { AssetItemData } from '../type';
 import * as actions from '../actions/assetsActions';
 
-export const createDddAssetAction = (asset: AssetItemData) => {
+export const createAddAssetAction = (asset: AssetItemData) => {
   return {
     type: actions.ADD_ASSET,
     payload: asset,

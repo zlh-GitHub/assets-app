@@ -2,6 +2,7 @@ import assetsReducers from './assetsReducer';
 import { Store, Action } from '../type';
 import { ICON } from '@/constants/Icon';
 import categoryReducer from './categoryReducer';
+import curCostReducer from './curCostReducer';
 
 const initialState: Store = {
   assets: [
@@ -105,5 +106,6 @@ export default function rootReducer(state: Store | undefined = initialState, act
   return {
     assets: assetsReducers(state.assets, action),
     categories: categoryReducer(state.categories, action),
+    curCost: curCostReducer(state.curCost, action),
   };
 }

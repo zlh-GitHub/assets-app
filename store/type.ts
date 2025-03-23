@@ -17,11 +17,15 @@ export type AssetItemData = {
   sellingPrice?: number; // 出售价格
   specifiedDailyPrice?: number; // 指定每日价格
   image?: string; // 物品图片
-  otherExpenses?: { // 其他费用
-    name: string; // 费用名称
-    price: number; // 费用价格
-    date: string; // 费用日期 timestamp
-  }[];
+  extraCosts?: CostItemData[];
+}
+
+export type CostItemData = {
+  id?: number; // id
+  name: string; // 费用名称
+  amount: number; // 费用价格
+  date: string; // 费用日期 timestamp
+  description?: string; // 费用描述
 }
 
 export type Category = {
@@ -41,4 +45,5 @@ export type Action<T = any> = {
 export type Store = {
   assets: Assets;
   categories: Categories;
+  curCost?: CostItemData;
 }
